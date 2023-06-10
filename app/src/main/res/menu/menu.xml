@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+        xmlns:tools="http://schemas.android.com/tools" xmlns:android="http://schemas.android.com/apk/res/android"
+        tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item android:id="@+id/nav_home"
+              android:icon="@drawable/home_icon"
+              android:title="home"/>
+        <item android:id="@+id/nav_admin"
+              android:icon="@drawable/admin_icon"
+              android:title="BatsWorks Admin"
+        />
+        <item
+                android:id="@+id/placeholder"
+                android:title=""/>
+        <item
+                android:id="@+id/nav_timecard"
+                android:icon="@drawable/timecard_icon"
+                android:title="TimeCard"
+        />
+        <item
+                android:id="@+id/nav_youtube"
+                android:title="Youtube"
+                android:icon="@drawable/video_icon"/>
+    </group>
+
+</menu>
