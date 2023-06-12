@@ -1,15 +1,37 @@
 package com.batsworks.simplewebview;
 
+import static android.view.Gravity.BOTTOM;
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
+
+import android.Manifest;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+
 import com.batsworks.simplewebview.fragments.BatsWorksAdmin;
 import com.batsworks.simplewebview.fragments.TimeCard;
 import com.batsworks.simplewebview.fragments.Youtube;
@@ -17,10 +39,22 @@ import com.batsworks.simplewebview.observable.IntObservable;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final boolean isANDROID12 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S;
+    private static final String[] PERMISSIONS = {
+            Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.MODIFY_AUDIO_SETTINGS, Manifest.permission.RECORD_AUDIO, Manifest.permission.INTERNET,
+            Manifest.permission.POST_NOTIFICATIONS};
+    private static final int PERMISSION_CODE = 1234;
     private FragmentManager fragmentManager;
     private FragmentTransaction fragmentTransaction;
     private BottomAppBar bottomAppBar;
@@ -31,13 +65,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         hideStatusBar();
+        askPermissions();
         setContentView(R.layout.activity_main);
         initComponents();
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Home()).commit();
         btnClick();
     }
 
     private void initComponents() {
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new Home()).commit();
         bottomAppBar = findViewById(R.id.bottom_bar);
         actionButton = findViewById(R.id.float_btn);
         BottomNavigationView navigationView = findViewById(R.id.nav_view);
@@ -46,10 +81,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void btnClick() {
-        actionButton.setOnClickListener(click -> intObservable.setChange(true));
-        actionButton.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-
-        });
+        actionButton.setOnClickListener(click -> showDialog());
     }
 
     private final BottomNavigationView.OnNavigationItemSelectedListener navListener = item -> {
@@ -78,6 +110,32 @@ public class MainActivity extends AppCompatActivity {
         fragmentTransaction.commit();
     }
 
+    private void showDialog() {
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.bottom_sheet);
+
+        dialog.show();
+        dialog.getWindow().setLayout(MATCH_PARENT, WRAP_CONTENT);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.getWindow().getAttributes().windowAnimations = R.style.BottomSheetAnimation;
+        dialog.getWindow().setGravity(BOTTOM);
+
+        AppCompatButton downloadLayout = dialog.findViewById(R.id.download_action);
+        AppCompatButton pictureLayout = dialog.findViewById(R.id.pip_action);
+        AppCompatButton hideAndShowMenu = dialog.findViewById(R.id.hide_menu_btns);
+
+        hideAndShowMenu.setOnClickListener(click -> {
+            bottomAppBar.setVisibility(bottomAppBar.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+            dialog.dismiss();
+        });
+        pictureLayout.setOnClickListener(click -> {
+            intObservable.setChange(true);
+            dialog.dismiss();
+        });
+        downloadLayout.setOnClickListener(click -> startActivity(new Intent(this, YoutubeDownload.class)));
+    }
+
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -97,8 +155,70 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void hideStatusBar() {
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    }
+
+    private void askPermissions() {
+        List<String> permissionsNeeded = new ArrayList<>();
+        for (String permission : PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_DENIED) {
+                permissionsNeeded.add(permission);
+            }
+        }
+        if (!permissionsNeeded.isEmpty()) {
+            ActivityCompat.requestPermissions(this, permissionsNeeded.toArray(new String[permissionsNeeded.size()]), PERMISSION_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_CODE) {
+            HashMap<String, Integer> permissionResult = new HashMap<>();
+            int deniedCode = 0;
+            for (int i = 0; i < grantResults.length; i++) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                    permissionResult.put(permissions[i], grantResults[i]);
+                    deniedCode++;
+                }
+            }
+
+            if (deniedCode != 0) {
+                for (Map.Entry<String, Integer> entry : permissionResult.entrySet()) {
+                    String name = entry.getKey();
+                    int result = entry.getValue();
+
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(this, name)) {
+                        new AlertDialog.Builder(this).setTitle("Permissions")
+                                .setCancelable(true).setMessage("Is important to allow all")
+                                .setPositiveButton("accept", (dialog, which) -> {
+                                    dialog.dismiss();
+                                    askPermissions();
+                                }).setNegativeButton("cancel", ((dialog, which) -> {
+                                    dialog.dismiss();
+                                })).create().show();
+                    } else {
+                        new AlertDialog.Builder(this).setTitle("Permission denied")
+                                .setCancelable(true).setMessage("Permission denied").setCancelable(true)
+                                .setMessage("Allow all permissions at [Settings]>[Permissions]")
+                                .setPositiveButton("Go to Settings", ((dialog, which) -> {
+                                    dialog.dismiss();
+                                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                            Uri.fromParts("package", getPackageName(), null));
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    startActivity(intent);
+                                    finish();
+                                })).setNegativeButton("no", ((dialog, which) -> {
+                                    dialog.dismiss();
+                                    finish();
+                                })).create().show();
+                        break;
+                    }
+                }
+            }
+
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
 }

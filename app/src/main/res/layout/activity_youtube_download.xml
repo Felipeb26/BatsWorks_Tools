@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:fitsSystemWindows="true"
+    android:padding="16dp"
+    tools:context=".YoutubeDownload"
+    tools:ignore="HardcodedText">
+
+    <EditText
+        android:id="@+id/input_url"
+        android:layout_width="350dp"
+        android:layout_height="50dp"
+        android:layout_above="@id/download_webview"
+        android:layout_marginBottom="30dp"
+        android:hint="youtube url"
+        android:inputType="textUri"
+        android:textColor="@color/black"
+        android:textColorHint="@color/gray"
+        android:textSize="16sp" />
+
+    <WebView
+        android:id="@+id/download_webview"
+        android:layout_width="350dp"
+        android:layout_height="250dp"
+        android:layout_centerInParent="true" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/download_webview"
+        android:orientation="horizontal"
+        android:weightSum="1">
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_preview"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_weight="0.5"
+            android:text="preview" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_download"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_weight="0.5"
+            android:text="download" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/percent_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/download_progress"
+        android:layout_margin="15dp"
+        android:text="@string/app_name"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="30sp" />
+
+    <ProgressBar
+        android:id="@+id/download_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/download_webview"
+        android:layout_marginTop="80dp"
+        android:indeterminateOnly="false"
+        android:progressDrawable="@drawable/custom_progress_horizontal" />
+
+    <ProgressBar
+        android:id="@+id/load_webview"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:layout_centerInParent="true"
+        android:indeterminate="true"
+        android:indeterminateDrawable="@drawable/rotation_anim"
+        android:visibility="gone" />
+
+</RelativeLayout>

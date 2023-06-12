@@ -3,22 +3,22 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.TimeCard">
+    tools:context=".fragments.BatsWorksAdmin">
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/timecard_refresh"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:id="@+id/admin_refresh">
 
         <WebView
-            android:id="@+id/timecard_webview"
+            android:id="@+id/admin_webview"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <ProgressBar
-        android:id="@+id/timecard_progress"
+        android:id="@+id/admin_progress"
         android:layout_width="250dp"
         android:layout_height="250dp"
         android:layout_centerInParent="true"

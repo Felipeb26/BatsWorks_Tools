@@ -1,17 +1,24 @@
 package com.batsworks.simplewebview.fragments;
 
 import android.annotation.SuppressLint;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.*;
 import android.webkit.*;
+import android.widget.ProgressBar;
+
 import androidx.activity.OnBackPressedCallback;
 import androidx.fragment.app.Fragment;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import com.batsworks.simplewebview.R;
+import com.batsworks.simplewebview.config.CallBack;
+import com.batsworks.simplewebview.config.MyBrowserConfig;
 
 public class BatsWorksAdmin extends Fragment {
 
     private WebView webView;
+    private ProgressBar progressBar;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -20,21 +27,33 @@ public class BatsWorksAdmin extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_menu, container, false);
+        View view = inflater.inflate(R.layout.fragment_admin, container, false);
         initComponents(view);
+        swipeRefresh();
         setupOnBackPressed();
         return view;
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private void initComponents(View group) {
-        webView = group.findViewById(R.id.webview);
-        webView.loadUrl("https://batsworks-admin.onrender.com/");
-        webView.setWebViewClient(new CallBack());
+    private void initComponents(View view) {
+        webView = view.findViewById(R.id.admin_webview);
+        progressBar = view.findViewById(R.id.admin_progress);
+        swipeRefreshLayout = view.findViewById(R.id.admin_refresh);
 
-        webView.setWebChromeClient(new MyBrowserConfig(requireActivity().getWindow(),webView));
+        webView.loadUrl("https://batsworks-admin.onrender.com/");
+        webView.setWebViewClient(new CallBack(progressBar));
+
+        webView.setWebChromeClient(new MyBrowserConfig(requireActivity().getWindow(), webView));
         WebSettings settings = webView.getSettings();
+        webView.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
         settings.setJavaScriptEnabled(true);
+    }
+
+    private void swipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            webView.reload();
+            swipeRefreshLayout.setRefreshing(false);
+        });
     }
 
     private void setupOnBackPressed() {
@@ -42,24 +61,14 @@ public class BatsWorksAdmin extends Fragment {
             @Override
             public void handleOnBackPressed() {
                 if (isEnabled()) {
-                    setEnabled(false);
-                    requireActivity().onBackPressed();
+                    if (webView != null && webView.canGoBack()) {
+                        webView.goBack();
+                    } else {
+                        setEnabled(false);
+                        requireActivity().onBackPressed();
+                    }
                 }
             }
         });
     }
-
-    public static class CallBack extends WebViewClient {
-        @Override
-        public void onPageStarted(WebView view, String url, Bitmap favicon) {
-            super.onPageStarted(view, url, favicon);
-        }
-
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-            view.loadUrl(request.getUrl().toString());
-            return true;
-        }
-    }
-
 }

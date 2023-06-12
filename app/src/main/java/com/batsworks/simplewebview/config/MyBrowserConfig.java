@@ -1,7 +1,9 @@
-package com.batsworks.simplewebview.fragments;
+package com.batsworks.simplewebview.config;
 
+import android.Manifest;
 import android.os.Build;
 import android.view.*;
+import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
@@ -17,6 +19,16 @@ public class MyBrowserConfig extends WebChromeClient {
         this.webView = webView;
     }
 
+    @Override
+    public void onPermissionRequest(PermissionRequest request) {
+        for (String resource : request.getResources()) {
+            if (Manifest.permission.RECORD_AUDIO.equals(resource)) {
+                request.grant(new String[]{resource});
+            } else if (resource.contains("AUDIO_CAPTURE")) {
+                request.grant(new String[]{resource});
+            }
+        }
+    }
 
     @Override
     public void onShowCustomView(View view, WebChromeClient.CustomViewCallback callback) {
