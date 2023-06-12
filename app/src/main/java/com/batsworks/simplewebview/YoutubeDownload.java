@@ -1,18 +1,11 @@
 package com.batsworks.simplewebview;
 
-import static java.util.Objects.isNull;
-
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
-import android.app.Notification;
 import android.content.Context;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.StrictMode;
+import android.os.*;
+import android.util.Log;
 import android.util.SparseArray;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -20,24 +13,23 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
-
+import at.huber.youtubeExtractor.YouTubeUriExtractor;
+import at.huber.youtubeExtractor.YtFile;
 import com.batsworks.simplewebview.config.CallBack;
 import com.batsworks.simplewebview.config.FileDownloader;
 import com.batsworks.simplewebview.services.PushNotification;
+import io.reactivex.rxjava3.core.Observable;
 
-import java.util.Objects;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import at.huber.youtubeExtractor.YouTubeUriExtractor;
-import at.huber.youtubeExtractor.YtFile;
+import static java.util.Objects.isNull;
 
-@SuppressLint({"StaticFieldLeak", "ServiceCast"})
+@SuppressLint({"StaticFieldLeak", "ServiceCast", "MissingPermission"})
 public class YoutubeDownload extends AppCompatActivity {
 
     private PushNotification pushNotification;
@@ -52,8 +44,9 @@ public class YoutubeDownload extends AppCompatActivity {
     private String idLink;
     private String titleLink;
     private ExecutorService downloadService;
+    private Observable<Map<String, String>> observable;
 
-    @SuppressLint("MissingPermission")
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,30 +77,52 @@ public class YoutubeDownload extends AppCompatActivity {
         btnDownload.setOnClickListener(click -> {
             if (!isNull(editText.getText())) {
                 if (idLink == null) {
-                    extractVideo(editText.getText().toString());
+                    extractVideo(editText.getText().toString(), 1);
                 }
-                executeTask();
             }
         });
         btnPreview.setOnClickListener(click -> {
             if (!isNull(editText.getText())) {
                 if (idLink == null)
-                    extractVideo(editText.getText().toString());
-                if (idLink != null)
-                    webView.loadUrl(String.format("https://youtube.com/embed/%s", idLink));
+                    extractVideo(editText.getText().toString(), 0);
             }
         });
     }
 
-    private void extractVideo(String videoLink) {
+    @SuppressLint("CheckResult")
+    private void extractVideo(String videoLink, int i) {
         YouTubeUriExtractor youTubeUriExtractor = new YouTubeUriExtractor(this) {
             @Override
             public void onUrisAvailable(String videoId, String title, SparseArray<YtFile> files) {
                 if (files != null) {
                     try {
+                        Map<String, String> map = new HashMap<>();
                         newLink = files.get(tag).getUrl();
                         idLink = videoId;
                         titleLink = title;
+
+                        observable = Observable.create(emitter -> {
+                            map.put("url", files.get(tag).getUrl());
+                            map.put("title", title);
+                            map.put("id", videoId);
+                            emitter.onNext(map);
+                        });
+
+                        observable.subscribe(make -> {
+                            if (i == 1)
+                                executeTask();
+                            if (i == 0)
+                                webView.loadUrl(String.format("https://youtube.com/embed/%s", idLink));
+                        }, throwable -> {
+                            Log.e("20", throwable.getMessage());
+                            Toast.makeText(YoutubeDownload.this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                        }, () -> {
+                            if (i == 1)
+                                Toast.makeText(YoutubeDownload.this, "Download start", Toast.LENGTH_SHORT).show();
+                            if (i == 0)
+                                Toast.makeText(YoutubeDownload.this, "Displaying webview", Toast.LENGTH_SHORT).show();
+                        });
+
                     } catch (Exception e) {
                         Toast.makeText(YoutubeDownload.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
@@ -119,8 +134,6 @@ public class YoutubeDownload extends AppCompatActivity {
     }
 
     private void executeTask() {
-        if (newLink == null)
-            return;
         downloader = new FileDownloader(YoutubeDownload.this, downloadProgress, percentBar, titleLink);
         String place = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 + "/" + titleLink.concat(".mp4");
@@ -143,7 +156,7 @@ public class YoutubeDownload extends AppCompatActivity {
     private void downloadVideo() {
         try {
             if (newLink == null) {
-                extractVideo(editText.getText().toString());
+                extractVideo(editText.getText().toString(), 1);
                 return;
             }
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(newLink));
@@ -168,4 +181,5 @@ public class YoutubeDownload extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
     }
+
 }

@@ -1,9 +1,5 @@
 package com.batsworks.simplewebview;
 
-import static android.view.Gravity.BOTTOM;
-import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
-
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -19,10 +15,6 @@ import android.provider.Settings;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
@@ -31,7 +23,6 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-
 import com.batsworks.simplewebview.fragments.BatsWorksAdmin;
 import com.batsworks.simplewebview.fragments.TimeCard;
 import com.batsworks.simplewebview.fragments.Youtube;
@@ -39,7 +30,7 @@ import com.batsworks.simplewebview.observable.IntObservable;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
+import com.google.android.material.navigation.NavigationBarView;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -47,9 +38,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static android.view.Gravity.BOTTOM;
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
+
 public class MainActivity extends AppCompatActivity {
 
-    private static final boolean isANDROID12 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S;
     private static final String[] PERMISSIONS = {
             Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.MODIFY_AUDIO_SETTINGS, Manifest.permission.RECORD_AUDIO, Manifest.permission.INTERNET,
@@ -76,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
         bottomAppBar = findViewById(R.id.bottom_bar);
         actionButton = findViewById(R.id.float_btn);
         BottomNavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setOnNavigationItemSelectedListener(navListener);
+        navigationView.setOnItemSelectedListener(navListener);
         intObservable = new IntObservable();
     }
 
@@ -84,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
         actionButton.setOnClickListener(click -> showDialog());
     }
 
-    private final BottomNavigationView.OnNavigationItemSelectedListener navListener = item -> {
+    private final NavigationBarView.OnItemSelectedListener navListener = item -> {
         switch (item.getItemId()) {
             case R.id.nav_home:
                 replaceFragment(new Home());
@@ -154,6 +148,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Deprecated
     private void hideStatusBar() {
         supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);

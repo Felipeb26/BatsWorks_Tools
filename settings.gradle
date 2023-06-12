@@ -4,6 +4,8 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
         maven { url "https://jitpack.io" }
+        maven { url "https://oss.jfrog.org/libs-snapshot" }
+
     }
 }
 dependencyResolutionManagement {
@@ -12,6 +14,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url "https://jitpack.io" }
+        maven { url "https://oss.jfrog.org/libs-snapshot" }
     }
 }
 rootProject.name = "BatsWorks Tools"
