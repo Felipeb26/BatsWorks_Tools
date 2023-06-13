@@ -13,8 +13,8 @@
             <shape android:shape="rectangle">
                 <corners android:radius="100dp"/>
                 <gradient
-                    android:startColor="@color/white"
-                    android:centerColor="@color/purple_200"
+                    android:startColor="@color/cyan_mid"
+                    android:centerColor="@color/cyan"
                     android:endColor="@color/white"
                     />
             </shape>

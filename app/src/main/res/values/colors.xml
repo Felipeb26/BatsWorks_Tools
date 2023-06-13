@@ -9,6 +9,7 @@
     <color name="white">#FFFFFFFF</color>
     <color name="cyan">#259F9F</color>
     <color name="cyan_mid">#00C5C5</color>
-    <color name="gray">#363737</color>
+    <color name="gray">#808080</color>
     <color name="corn_flower">#4C5270</color>
+    <color name="green_neon">#39FF14</color>
 </resources>

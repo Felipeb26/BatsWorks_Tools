@@ -3,13 +3,14 @@ package com.batsworks.simplewebview;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
@@ -23,6 +24,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import com.batsworks.simplewebview.brodcast.NotificationReceiver;
 import com.batsworks.simplewebview.fragments.BatsWorksAdmin;
 import com.batsworks.simplewebview.fragments.TimeCard;
 import com.batsworks.simplewebview.fragments.Youtube;
@@ -60,6 +62,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         hideStatusBar();
         askPermissions();
+
+        IntentFilter filter = new IntentFilter("actionpause");
+        BroadcastReceiver receiver = new NotificationReceiver();
+        registerReceiver(receiver, filter);
+
         setContentView(R.layout.activity_main);
         initComponents();
         btnClick();
