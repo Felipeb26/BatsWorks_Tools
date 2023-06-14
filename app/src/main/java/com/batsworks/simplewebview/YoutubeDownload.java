@@ -36,7 +36,7 @@ import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 import static java.util.Objects.isNull;
 
-@SuppressLint({"StaticFieldLeak", "ServiceCast", "MissingPermission"})
+@SuppressLint({"StaticFieldLeak", "ServiceCast", "MissingPermission", "CheckResult"})
 public class YoutubeDownload extends AppCompatActivity {
     private static final String ACTION_PAUSE = "actionpause";
     private static final String ACTION_PLAY = "actionplay";
@@ -51,7 +51,7 @@ public class YoutubeDownload extends AppCompatActivity {
     private String videoLink;
     private String titleLink;
     private final ExecutorService downloadService = Executors.newFixedThreadPool(3);
-    private Observable<Map<String, String>> observable;
+    private Observable<Object> observable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +84,20 @@ public class YoutubeDownload extends AppCompatActivity {
         btnDownload.setOnClickListener(click -> {
             if (!isNull(editText.getText())) {
                 Request request = new Request();
-                Object s = request.executeOnExecutor(downloadService, editText.getText().toString());
+//                Object s = request.executeOnExecutor(downloadService, editText.getText().toString());
+
+                observable = Observable.create(emitter -> {
+                    emitter.onNext(request.execute(editText.getText().toString()));
+                });
+
+                observable.subscribe(make -> {
+                            System.out.println(make);
+                        }, throwable -> Snack.errorBar(view, throwable.getMessage()),
+                        () -> {
+                            Snack.bar(view, "Displaying webview");
+                        });
+
+
                 System.out.println("vkjfv");
             }
         });
@@ -99,25 +112,11 @@ public class YoutubeDownload extends AppCompatActivity {
         });
     }
 
-    @SuppressLint("CheckResult")
     private void extractVideo(String videoUrl, int i) {
         final ExecutorService service = Executors.newSingleThreadExecutor();
         showWebView(i);
         try {
             new YouTubeExtractor(this) {
-
-                @Override
-                protected void onCancelled(SparseArray<YtFile> ytFileSparseArray) {
-                    super.onCancelled(ytFileSparseArray);
-                    System.out.println(ytFileSparseArray.get(0));
-                }
-
-                @Override
-                protected void onProgressUpdate(Void... values) {
-                    super.onProgressUpdate(values);
-                    Log.i("5", String.valueOf(values.length));
-                }
-
                 @Override
                 protected void onExtractionComplete(SparseArray<YtFile> files, VideoMeta videoMeta) {
                     if (files != null) {

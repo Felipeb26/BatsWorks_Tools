@@ -2,6 +2,7 @@ package com.batsworks.simplewebview.observable;
 
 import android.os.AsyncTask;
 import com.batsworks.simplewebview.model.YoutubeModel;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
@@ -16,6 +17,7 @@ public class Request extends AsyncTask<String, Integer, Object> {
     @Override
     protected Object doInBackground(String... strings) {
         try {
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             String json = null;
 
             URL urlLink = new URL(strings[0]);
@@ -45,6 +47,8 @@ public class Request extends AsyncTask<String, Integer, Object> {
             json = json.substring(json.indexOf("{"));
 
             json = json.replace("\\u0026", "&");
+
+
 
             return mapper.readValue(json, YoutubeModel.class);
         } catch (Exception e) {
