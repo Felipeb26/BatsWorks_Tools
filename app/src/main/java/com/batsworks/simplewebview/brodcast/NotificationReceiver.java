@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import com.batsworks.simplewebview.YoutubeDownload;
 
+import java.util.Map;
+
 public class NotificationReceiver extends BroadcastReceiver {
 
     private static final String ACTION_PAUSE = "actionpause";
@@ -13,7 +15,7 @@ public class NotificationReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        String action = intent.getAction();
+        Object action = intent.getAction();
 
         Intent serviceIntent = new Intent(context, YoutubeDownload.class);
 
@@ -32,7 +34,7 @@ public class NotificationReceiver extends BroadcastReceiver {
             return;
         }
 
-        if (action.startsWith("http")) {
+        if (action instanceof Map) {
             serviceIntent.putExtra("ActionName", RESTART).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(serviceIntent);
             return;

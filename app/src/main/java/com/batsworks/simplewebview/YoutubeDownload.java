@@ -2,6 +2,8 @@ package com.batsworks.simplewebview;
 
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -16,10 +18,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
-import at.huber.youtubeExtractor.YouTubeUriExtractor;
+import at.huber.youtubeExtractor.VideoMeta;
+import at.huber.youtubeExtractor.YouTubeExtractor;
 import at.huber.youtubeExtractor.YtFile;
 import com.batsworks.simplewebview.config.CallBack;
 import com.batsworks.simplewebview.notification.Snack;
+import com.batsworks.simplewebview.observable.Request;
 import com.batsworks.simplewebview.services.FileDownloader;
 import io.reactivex.rxjava3.core.Observable;
 
@@ -44,8 +48,7 @@ public class YoutubeDownload extends AppCompatActivity {
     private WebView webView;
     private ProgressBar progressBar, downloadProgress;
     private TextView percentBar;
-    private String newLink;
-    private String idLink;
+    private String videoLink;
     private String titleLink;
     private final ExecutorService downloadService = Executors.newFixedThreadPool(3);
     private Observable<Map<String, String>> observable;
@@ -80,67 +83,77 @@ public class YoutubeDownload extends AppCompatActivity {
     private void btnClick() {
         btnDownload.setOnClickListener(click -> {
             if (!isNull(editText.getText())) {
-                if (idLink == null) {
-                    extractVideo(editText.getText().toString(), 1);
-                } else {
-                    executeTask();
-                }
+                Request request = new Request();
+                Object s = request.executeOnExecutor(downloadService, editText.getText().toString());
+                System.out.println("vkjfv");
             }
         });
         btnPreview.setOnClickListener(click -> {
             if (!isNull(editText.getText())) {
-                if (idLink == null) {
+                if (videoLink == null) {
                     extractVideo(editText.getText().toString(), 0);
                 } else {
-                    webView.loadUrl(String.format("https://youtube.com/embed/%s", idLink));
+                    webView.loadUrl(videoLink);
                 }
             }
         });
     }
 
     @SuppressLint("CheckResult")
-    private void extractVideo(String videoLink, int i) {
+    private void extractVideo(String videoUrl, int i) {
+        final ExecutorService service = Executors.newSingleThreadExecutor();
         showWebView(i);
-        YouTubeUriExtractor youTubeUriExtractor = new YouTubeUriExtractor(this) {
-            @Override
-            public void onUrisAvailable(String videoId, String title, SparseArray<YtFile> files) {
-                if (files != null) {
-                    try {
-                        Map<String, String> map = new HashMap<>();
-                        newLink = files.get(tag).getUrl();
-                        idLink = videoId;
-                        titleLink = title;
+        try {
+            new YouTubeExtractor(this) {
 
-                        observable = Observable.create(emitter -> {
-                            map.put("url", files.get(tag).getUrl());
-                            map.put("title", title);
-                            map.put("id", videoId);
-                            emitter.onNext(map);
-                        });
+                @Override
+                protected void onCancelled(SparseArray<YtFile> ytFileSparseArray) {
+                    super.onCancelled(ytFileSparseArray);
+                    System.out.println(ytFileSparseArray.get(0));
+                }
 
-                        observable.subscribe(make -> {
-                            progressBar.setVisibility(GONE);
-                            if (i == 1)
-                                executeTask();
-                            if (i == 0)
-                                webView.loadUrl(String.format("https://youtube.com/embed/%s", idLink));
-                        }, throwable -> {
-                            Snack.errorBar(view, throwable.getMessage());
-                        }, () -> {
-                            if (i == 1)
-                                Snack.bar(view, "Download start");
-                            if (i == 0) {
-                                Snack.bar(view, "Displaying webview");
-                            }
-                        });
-                    } catch (Exception e) {
-                        Snack.errorBar(view, e.getMessage());
+                @Override
+                protected void onProgressUpdate(Void... values) {
+                    super.onProgressUpdate(values);
+                    Log.i("5", String.valueOf(values.length));
+                }
+
+                @Override
+                protected void onExtractionComplete(SparseArray<YtFile> files, VideoMeta videoMeta) {
+                    if (files != null) {
+                        try {
+                            Map<String, String> map = new HashMap<>();
+
+                            videoLink = files.get(tag).getUrl();
+
+                            observable = Observable.create(emitter -> {
+                                map.put("url", files.get(tag).getUrl());
+                                emitter.onNext(map);
+                            });
+
+                            observable.subscribe(make -> {
+                                        progressBar.setVisibility(GONE);
+                                        if (i == 1)
+                                            executeTask();
+                                        if (i == 0)
+                                            webView.loadUrl(videoLink);
+                                    }, throwable -> Snack.errorBar(view, throwable.getMessage()),
+                                    () -> {
+                                        if (i == 1)
+                                            Snack.bar(view, "Download start");
+                                        if (i == 0) {
+                                            Snack.bar(view, "Displaying webview");
+                                        }
+                                    });
+                        } catch (Exception e) {
+                            Snack.errorBar(view, e.getMessage());
+                        }
                     }
                 }
-            }
-        };
-        ExecutorService service = Executors.newSingleThreadExecutor();
-        youTubeUriExtractor.executeOnExecutor(service, videoLink);
+            }.executeOnExecutor(service, videoUrl);
+        } catch (Exception e) {
+            Snack.errorBar(view, e.getMessage());
+        }
     }
 
     private void executeTask() {
@@ -152,7 +165,7 @@ public class YoutubeDownload extends AppCompatActivity {
         downloadService.execute(new Runnable() {
             @Override
             public void run() {
-                downloader.makeRequest(newLink, place);
+                downloader.makeRequest(videoLink, place);
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -164,11 +177,11 @@ public class YoutubeDownload extends AppCompatActivity {
 
     private void downloadVideo() {
         try {
-            if (newLink == null) {
+            if (videoLink == null) {
                 extractVideo(editText.getText().toString(), 1);
                 return;
             }
-            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(newLink));
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(videoLink));
             request.allowScanningByMediaScanner();
             request.setTitle(titleLink)
                     .setDescription(titleLink.concat(" is dowloading...."))
@@ -211,7 +224,7 @@ public class YoutubeDownload extends AppCompatActivity {
 
             if (action.equals(ACTION_PLAY)) {
                 if (downloadService == null) {
-                    extractVideo(newLink, 1);
+                    extractVideo(videoLink, 1);
                 }
             }
         } catch (Exception e) {
@@ -220,17 +233,14 @@ public class YoutubeDownload extends AppCompatActivity {
         }
     }
 
-    private void stopThread() throws InterruptedException {
-        Map<Thread, StackTraceElement[]> threadMap = Thread.getAllStackTraces();
-        for (Map.Entry<Thread, StackTraceElement[]> entry : threadMap.entrySet()) {
-            Thread t = entry.getKey();
-            System.out.println(t.getName());
-            if (t.getName().toLowerCase().startsWith("okhttp")) {
-                t.join();
-                t.stop();
-                break;
-            }
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        ClipboardManager manager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        if (manager.hasPrimaryClip()) {
+            ClipData.Item item = manager.getPrimaryClip().getItemAt(0);
+            editText.setText(item.getText().toString());
         }
+        super.onWindowFocusChanged(hasFocus);
     }
 
 

@@ -20,6 +20,9 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 @SuppressLint("MissingPermission")
 public class FileDownloader {
@@ -79,6 +82,9 @@ public class FileDownloader {
 
     private void downloadFile(HttpURLConnection connection, String path) {
         try {
+            Map<String, String> map = new HashMap<>();
+            map.put("url", urlLink);
+            map.put("title", title);
 
             float contentLength = connection.getContentLength();
             BufferedInputStream is = new BufferedInputStream(connection.getInputStream());
@@ -89,7 +95,11 @@ public class FileDownloader {
             int bytesRead;
             notificationBuilder = pushNotification.create(context, title, "Downloading....");
             notificationBuilder
-                    .addAction(R.drawable.home_icon, "HOME", homePendIntent())
+                    .setOnlyAlertOnce(true)
+                    .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
+                            .setShowActionsInCompactView(0, 1, 2, 3)
+                    )
+                    .addAction(R.drawable.home_icon, "HOME", homePendIntent(map))
                     .addAction(R.drawable.pause_icon, "PAUSE", pausePendIntent())
                     .addAction(R.drawable.play_icon, "PLAY", playPendIntent());
 
@@ -115,7 +125,7 @@ public class FileDownloader {
                     }
                     limitMessage++;
                     progressBar.setProgress((int) progress);
-                    textView.setText(String.valueOf(Math.min(currentProgress, 100)));
+                    textView.setText(Math.min(currentProgress, 100));
                 });
 
                 // Handler interruptions or cancellations here
@@ -131,7 +141,9 @@ public class FileDownloader {
             notificationManagerCompat = NotificationManagerCompat.from(context);
             notificationManagerCompat.notify(2, notificationBuilder
                     .setOngoing(true)
-                    .setContentText("Download have finish").build());
+                    .setContentText("Download have finish")
+                    .setProgress((int) 100, 100, false)
+                    .build());
         }
     }
 
@@ -145,13 +157,14 @@ public class FileDownloader {
     private PendingIntent playPendIntent() {
         Intent playIntent = new Intent(context, NotificationReceiver.class)
                 .setAction(ACTION_PLAY)
-                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        | Intent.FLAG_ACTIVITY_NEW_TASK);
         return PendingIntent.getBroadcast(context, 0, playIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
     }
 
-    private PendingIntent homePendIntent() {
+    private PendingIntent homePendIntent(Map<String, String> map) {
         Intent playIntent = new Intent(context, NotificationReceiver.class)
-                .setAction(ACTION_PLAY)
+                .setAction(Objects.toString(map))
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         return PendingIntent.getBroadcast(context, 0, playIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
 
