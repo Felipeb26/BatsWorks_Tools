@@ -22,13 +22,13 @@ public class ScrollHorizontal {
         public void run() {
             int currentScrollX = scrollView.getScrollX();
             int maxScrollX = scrollView.getChildAt(0).getWidth() - scrollView.getWidth();
-            int newScrollX = currentScrollX + speed > 0 ? speed : 10;
+            int newScrollX = currentScrollX + 10;
 
-            if (newScrollX >= maxScrollX) {
+            if (newScrollX > maxScrollX) {
                 newScrollX = 0;
             }
             scrollView.scrollTo(newScrollX, 0);
-            handler.postDelayed(this, delay > 0 ? delay : 50);
+            handler.postDelayed(this, 100);
         }
     };
 

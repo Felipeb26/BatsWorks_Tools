@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">Simple Web View</string>
-    <string name="open_nav">nav open</string>
-    <string name="close_nav">nav close</string>
+    <string name="app_name">BatsWorks</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="details">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vulputate ligula vitae justo accumsan, eget fermentum odio porta. Praesent a neque tincidunt, consectetur dolor sed, convallis mi. Integer posuere euismod mauris id pellentesque. Quisque euismod elementum nulla, sed suscipit eros tristique in. Vestibulum congue eleifend leo, sit amet commodo dolor faucibus id. Suspendisse et ante eu nibh condimentum condimentum sed nec lectus. Sed quis risus nulla. Integer consectetur aliquam sem ac consectetur.
+</string>
 </resources>
