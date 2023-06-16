@@ -1,4 +1,4 @@
-package com.batsworks.simplewebview.config;
+package com.batsworks.simplewebview.config.web;
 
 import android.graphics.Bitmap;
 import android.view.View;

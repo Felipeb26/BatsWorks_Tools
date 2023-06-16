@@ -14,9 +14,9 @@ import androidx.fragment.app.Fragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.batsworks.simplewebview.R;
-import com.batsworks.simplewebview.config.CallBack;
-import com.batsworks.simplewebview.config.MyBrowserConfig;
-import com.batsworks.simplewebview.config.MyWebViewSetting;
+import com.batsworks.simplewebview.config.web.CallBack;
+import com.batsworks.simplewebview.config.web.MyBrowserConfig;
+import com.batsworks.simplewebview.config.web.MyWebViewSetting;
 import com.batsworks.simplewebview.observable.IntObservable;
 
 import java.util.Observer;

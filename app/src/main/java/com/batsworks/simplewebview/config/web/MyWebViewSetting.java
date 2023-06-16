@@ -1,4 +1,4 @@
-package com.batsworks.simplewebview.config;
+package com.batsworks.simplewebview.config.web;
 
 import android.annotation.SuppressLint;
 import android.webkit.WebSettings;

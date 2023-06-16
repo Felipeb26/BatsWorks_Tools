@@ -14,8 +14,8 @@ import androidx.fragment.app.Fragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.batsworks.simplewebview.R;
-import com.batsworks.simplewebview.config.CallBack;
-import com.batsworks.simplewebview.config.MyBrowserConfig;
+import com.batsworks.simplewebview.config.web.CallBack;
+import com.batsworks.simplewebview.config.web.MyBrowserConfig;
 
 public class TimeCard extends Fragment {
 

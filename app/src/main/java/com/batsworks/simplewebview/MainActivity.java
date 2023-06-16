@@ -6,16 +6,20 @@ import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.HorizontalScrollView;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
@@ -24,6 +28,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+
 import com.batsworks.simplewebview.brodcast.NotificationReceiver;
 import com.batsworks.simplewebview.fragments.BatsWorksAdmin;
 import com.batsworks.simplewebview.fragments.TimeCard;
@@ -33,6 +38,7 @@ import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -175,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        SharedPreferences prefs = getSharedPreferences("have_aceepted", MODE_PRIVATE);
         if (requestCode == PERMISSION_CODE) {
             HashMap<String, Integer> permissionResult = new HashMap<>();
             int deniedCode = 0;
@@ -200,20 +207,23 @@ public class MainActivity extends AppCompatActivity {
                                     dialog.dismiss();
                                 })).create().show();
                     } else {
-                        new AlertDialog.Builder(this).setTitle("Permission denied")
-                                .setCancelable(true).setMessage("Permission denied").setCancelable(true)
-                                .setMessage("Allow all permissions at [Settings]>[Permissions]")
-                                .setPositiveButton("Go to Settings", ((dialog, which) -> {
-                                    dialog.dismiss();
-                                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                            Uri.fromParts("package", getPackageName(), null));
-                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    startActivity(intent);
-                                    finish();
-                                })).setNegativeButton("no", ((dialog, which) -> {
-                                    dialog.dismiss();
-                                    finish();
-                                })).create().show();
+                        String haveAccepted = prefs.getString("accepted", "");
+                        if (!haveAccepted.trim().equals("") || haveAccepted.startsWith("true")) {
+                            new AlertDialog.Builder(this).setTitle("Permission denied")
+                                    .setCancelable(true).setMessage("Permission denied")
+                                    .setMessage("Allow all permissions at [Settings]>[Permissions]")
+                                    .setPositiveButton("Go to Settings", ((dialog, which) -> {
+                                        dialog.dismiss();
+                                        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                                Uri.fromParts("package", getPackageName(), null));
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        startActivity(intent);
+                                        finish();
+                                    })).setNegativeButton("no", ((dialog, which) -> {
+                                        sharedPreference("false");
+                                        dialog.dismiss();
+                                    })).create().show();
+                        }
                         break;
                     }
                 }
@@ -221,6 +231,13 @@ public class MainActivity extends AppCompatActivity {
 
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    private void sharedPreference(String accepted) {
+        SharedPreferences prefs = getSharedPreferences("have_aceepted", MODE_PRIVATE);
+        SharedPreferences.Editor edit = prefs.edit();
+        edit.putString("accepted", accepted);
+        edit.apply();
     }
 
 }
