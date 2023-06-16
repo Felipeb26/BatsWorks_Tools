@@ -18,4 +18,10 @@ public class MyWebViewSetting {
         settings.setDomStorageEnabled(true);
         settings.setMediaPlaybackRequiresUserGesture(false);
     }
+
+    public void view() {
+//        settings.setDefaultZoom(WebSettings.ZoomDensity.FAR);
+        settings.setLoadWithOverviewMode(true);
+        settings.setUseWideViewPort(true);
+    }
 }

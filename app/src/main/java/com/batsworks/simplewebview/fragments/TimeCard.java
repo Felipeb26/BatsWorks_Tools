@@ -16,6 +16,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.batsworks.simplewebview.R;
 import com.batsworks.simplewebview.config.web.CallBack;
 import com.batsworks.simplewebview.config.web.MyBrowserConfig;
+import com.batsworks.simplewebview.config.web.MyWebViewSetting;
 
 public class TimeCard extends Fragment {
 
@@ -47,9 +48,8 @@ public class TimeCard extends Fragment {
         webView.setWebViewClient(new CallBack(progressBar));
 
         webView.setWebChromeClient(new MyBrowserConfig(requireActivity().getWindow(), webView));
-        WebSettings settings = webView.getSettings();
-        webView.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-        settings.setJavaScriptEnabled(true);
+        final MyWebViewSetting setting = new MyWebViewSetting(webView.getSettings());
+        setting.setting();
     }
 
     private void swipeRefresh() {

@@ -10,10 +10,24 @@ import android.widget.ProgressBar;
 
 public class CallBack extends WebViewClient {
 
-    private final ProgressBar progressBar;
+    private ProgressBar progressBar;
+    private WebView webView;
 
-    public CallBack(ProgressBar progressBar){
+    public CallBack(ProgressBar progressBar, WebView webView) {
         this.progressBar = progressBar;
+        this.webView = webView;
+    }
+
+    public CallBack(ProgressBar progressBar) {
+        this.progressBar = progressBar;
+    }
+
+    public CallBack(WebView webView) {
+        this.webView = webView;
+    }
+
+    public CallBack() {
+
     }
 
     @Override
@@ -21,13 +35,17 @@ public class CallBack extends WebViewClient {
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().acceptCookie();
         CookieManager.getInstance().flush();
-        progressBar.setVisibility(View.GONE);
+        if (progressBar != null)
+            progressBar.setVisibility(View.GONE);
+        if (webView != null)
+            webView.setInitialScale(1);
     }
 
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
-        progressBar.setVisibility(View.VISIBLE);
+        if (progressBar != null)
+            progressBar.setVisibility(View.VISIBLE);
     }
 
     @Override

@@ -11,15 +11,15 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.HorizontalScrollView;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
@@ -28,8 +28,9 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-
+import com.batsworks.simplewebview.brodcast.InternetBrodcast;
 import com.batsworks.simplewebview.brodcast.NotificationReceiver;
+import com.batsworks.simplewebview.config.internet.CheckInternet;
 import com.batsworks.simplewebview.fragments.BatsWorksAdmin;
 import com.batsworks.simplewebview.fragments.TimeCard;
 import com.batsworks.simplewebview.fragments.Youtube;
@@ -38,13 +39,14 @@ import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
-
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static android.view.Gravity.BOTTOM;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
@@ -62,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
     private BottomAppBar bottomAppBar;
     private FloatingActionButton actionButton;
     private IntObservable intObservable;
+    private BroadcastReceiver notificationReceiver, internetReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,11 +73,12 @@ public class MainActivity extends AppCompatActivity {
         askPermissions();
 
         IntentFilter filter = new IntentFilter("actionpause");
-        BroadcastReceiver receiver = new NotificationReceiver();
-        registerReceiver(receiver, filter);
-
+        notificationReceiver = new NotificationReceiver();
+        registerReceiver(notificationReceiver, filter);
         setContentView(R.layout.activity_main);
         initComponents();
+        checkingInternetStatus();
+        observerInternet();
         btnClick();
     }
 
@@ -87,12 +91,33 @@ public class MainActivity extends AppCompatActivity {
         intObservable = new IntObservable();
     }
 
+    private void observerInternet() {
+        CheckInternet.Status status = CheckInternet.networkInfo(this);
+
+        final Handler handler = new Handler(Looper.getMainLooper());
+        ExecutorService service = Executors.newSingleThreadExecutor();
+
+        service.execute(() -> handler.post(() -> {
+            boolean unavaliable = status.equals(CheckInternet.Status.UNAVALIABLE);
+            bottomAppBar.setVisibility(unavaliable ? View.INVISIBLE : View.VISIBLE);
+            actionButton.setClickable(!unavaliable);
+        }));
+    }
+
     private void btnClick() {
         actionButton.setOnClickListener(click -> showDialog());
     }
 
+    private void checkingInternetStatus() {
+        internetReceiver = new InternetBrodcast();
+        registerReceiver(internetReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+    }
+
     private final NavigationBarView.OnItemSelectedListener navListener = item -> {
         switch (item.getItemId()) {
+            case R.id.placeholder:
+                showDialog();
+                break;
             case R.id.nav_home:
                 replaceFragment(new Home());
                 break;
@@ -144,11 +169,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-    }
-
-    @Override
     public void onConfigurationChanged(@NonNull @NotNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
@@ -167,6 +187,13 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
+    private void sharedPreference(String accepted) {
+        SharedPreferences prefs = getSharedPreferences("have_aceepted", MODE_PRIVATE);
+        SharedPreferences.Editor edit = prefs.edit();
+        edit.putString("accepted", accepted);
+        edit.apply();
+    }
+
     private void askPermissions() {
         List<String> permissionsNeeded = new ArrayList<>();
         for (String permission : PERMISSIONS) {
@@ -177,6 +204,17 @@ public class MainActivity extends AppCompatActivity {
         if (!permissionsNeeded.isEmpty()) {
             ActivityCompat.requestPermissions(this, permissionsNeeded.toArray(new String[permissionsNeeded.size()]), PERMISSION_CODE);
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        checkingInternetStatus();
     }
 
     @Override
@@ -231,13 +269,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    private void sharedPreference(String accepted) {
-        SharedPreferences prefs = getSharedPreferences("have_aceepted", MODE_PRIVATE);
-        SharedPreferences.Editor edit = prefs.edit();
-        edit.putString("accepted", accepted);
-        edit.apply();
     }
 
 }
