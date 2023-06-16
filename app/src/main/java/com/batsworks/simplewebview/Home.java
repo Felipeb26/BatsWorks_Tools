@@ -85,7 +85,7 @@ public class Home extends Fragment {
     }
 
     private void increaseBright() {
-        float brightnessFactor = 1.5f;
+        float brightnessFactor = 1.7f;
         ColorMatrix colorMatrix = new ColorMatrix();
         colorMatrix.set(new float[]{
                 brightnessFactor, 0, 0, 0, 0, // Red
