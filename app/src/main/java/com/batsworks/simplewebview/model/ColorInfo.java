@@ -1,5 +1,6 @@
 package com.batsworks.simplewebview.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ColorInfo {
-    private String primaries;
-    private String transferCharacteristics;
-    private String matrixCoefficients;
+    @JsonProperty private String primaries;
+    @JsonProperty private String transferCharacteristics;
+    @JsonProperty private String matrixCoefficients;
 }

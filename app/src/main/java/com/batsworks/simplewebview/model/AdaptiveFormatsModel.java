@@ -23,6 +23,7 @@ public class AdaptiveFormatsModel {
    @JsonProperty  private String quality;
    @JsonProperty  private Long fps;
    @JsonProperty  private String qualityLabel;
+   @JsonProperty  private String audioQuality;
    @JsonProperty  private String projectionType;
    @JsonProperty  private String averageBitrate;
    @JsonProperty  private String approxDurationMs;

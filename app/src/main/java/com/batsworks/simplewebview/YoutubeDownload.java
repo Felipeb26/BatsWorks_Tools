@@ -1,9 +1,5 @@
 package com.batsworks.simplewebview;
 
-import static android.view.View.GONE;
-import static android.view.View.VISIBLE;
-import static java.util.Objects.isNull;
-
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.content.ClipData;
@@ -11,11 +7,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.StrictMode;
+import android.os.*;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
@@ -24,24 +16,25 @@ import android.webkit.WebView;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
-
+import at.huber.youtubeExtractor.VideoMeta;
+import at.huber.youtubeExtractor.YouTubeExtractor;
+import at.huber.youtubeExtractor.YtFile;
 import com.batsworks.simplewebview.config.web.CallBack;
 import com.batsworks.simplewebview.notification.Snack;
 import com.batsworks.simplewebview.observable.Request;
 import com.batsworks.simplewebview.services.FileDownloader;
+import io.reactivex.rxjava3.core.Observable;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import at.huber.youtubeExtractor.VideoMeta;
-import at.huber.youtubeExtractor.YouTubeExtractor;
-import at.huber.youtubeExtractor.YtFile;
-import io.reactivex.rxjava3.core.Observable;
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+import static java.util.Objects.isNull;
 
 @SuppressLint({"StaticFieldLeak", "ServiceCast", "MissingPermission", "CheckResult"})
 public class YoutubeDownload extends AppCompatActivity {
@@ -57,7 +50,7 @@ public class YoutubeDownload extends AppCompatActivity {
     private TextView percentBar;
     private String videoLink;
     private String titleLink;
-    private final ExecutorService downloadService = Executors.newSingleThreadExecutor();
+    private ExecutorService downloadService = Executors.newSingleThreadExecutor();
     private Observable<Object> observable;
 
     @Override
@@ -91,11 +84,14 @@ public class YoutubeDownload extends AppCompatActivity {
         btnDownload.setOnClickListener(click -> {
             if (!isNull(editText.getText())) {
                 downloadService.execute(() -> {
-                    Object o = Request.makeRequest(editText.getText().toString());
-                    Log.i("88", o.toString());
+                    String request = Request.makeRequest(editText.getText().toString());
 
                     runOnUiThread(() -> {
+                        Intent intent = new Intent(this, DownLoadOption.class);
+                        intent.putExtra("class", request);
                         Snack.bar(view, "Displaying webview");
+
+                        startActivity(intent);
                     });
                 });
             }
@@ -210,7 +206,6 @@ public class YoutubeDownload extends AppCompatActivity {
             if (action == null)
                 return;
             if (action.equals(ACTION_PAUSE)) {
-//                stopThread();
                 if (downloadService != null) {
                     Log.i("51", downloadService.isTerminated() + "\n");
                     showWebView(1);
@@ -241,6 +236,14 @@ public class YoutubeDownload extends AppCompatActivity {
         super.onWindowFocusChanged(hasFocus);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (downloadService != null) {
+            downloadService.shutdown();
+            downloadService = null;
+        }
+    }
 
     @Override
     public void onBackPressed() {

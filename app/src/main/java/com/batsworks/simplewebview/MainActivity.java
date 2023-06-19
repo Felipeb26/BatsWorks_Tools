@@ -32,6 +32,7 @@ import com.batsworks.simplewebview.brodcast.InternetBrodcast;
 import com.batsworks.simplewebview.brodcast.NotificationReceiver;
 import com.batsworks.simplewebview.config.internet.CheckInternet;
 import com.batsworks.simplewebview.fragments.BatsWorksAdmin;
+import com.batsworks.simplewebview.fragments.Home;
 import com.batsworks.simplewebview.fragments.TimeCard;
 import com.batsworks.simplewebview.fragments.Youtube;
 import com.batsworks.simplewebview.observable.IntObservable;

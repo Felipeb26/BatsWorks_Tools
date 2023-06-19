@@ -1,8 +1,5 @@
 package com.batsworks.simplewebview.observable;
 
-import android.os.AsyncTask;
-
-import com.batsworks.simplewebview.model.YoutubeModel;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -13,7 +10,7 @@ import java.net.URL;
 
 public class Request {
 
-    public static YoutubeModel makeRequest(String... strings) {
+    public static String makeRequest(String... strings) {
         try {
             final ObjectMapper mapper = new ObjectMapper();
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -46,7 +43,7 @@ public class Request {
             json = json.substring(json.indexOf("{"));
             json = json.replace("\\u0026", "&");
 
-            return mapper.readValue(json, YoutubeModel.class);
+            return json;
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException();

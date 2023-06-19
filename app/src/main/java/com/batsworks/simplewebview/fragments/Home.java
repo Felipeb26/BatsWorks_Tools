@@ -1,4 +1,4 @@
-package com.batsworks.simplewebview;
+package com.batsworks.simplewebview.fragments;
 
 import android.animation.LayoutTransition;
 import android.graphics.ColorFilter;
@@ -17,6 +17,7 @@ import android.widget.TextView;
 import androidx.activity.OnBackPressedCallback;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
+import com.batsworks.simplewebview.R;
 import com.batsworks.simplewebview.config.web.CallBack;
 import com.batsworks.simplewebview.config.web.MyBrowserConfig;
 import com.batsworks.simplewebview.config.web.MyWebViewSetting;
@@ -25,7 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Home extends Fragment {
-
 
     private ImageView logoImageView;
     private CardView aboutCard;
