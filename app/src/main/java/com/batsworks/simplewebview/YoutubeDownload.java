@@ -39,7 +39,6 @@ public class YoutubeDownload extends AppCompatActivity {
     private final ExecutorService downloadService = Executors.newSingleThreadExecutor();
     private static final String TAG = "22";
     private static View view;
-    private FileDownloader downloader;
     private EditText editText;
     private AppCompatButton btnDownload, btnPreview, btnSearch;
     private WebView webView;
@@ -89,8 +88,7 @@ public class YoutubeDownload extends AppCompatActivity {
                     runOnUiThread(() -> {
                         Intent intent = new Intent(this, DownLoadOption.class);
                         intent.putExtra("class", request);
-                        Snack.bar(view, "Displaying webview");
-
+                        Snack.bar(view, "Select An option");
                         startActivity(intent);
                     });
                 });
@@ -110,32 +108,12 @@ public class YoutubeDownload extends AppCompatActivity {
     }
 
     private void executeTask() {
+        ExecutorService service = Executors.newFixedThreadPool(3);
         String title = "d389f02b21f60630c52d";
-        downloader = new FileDownloader(YoutubeDownload.this, downloadProgress, percentBar, title, contentLenght);
+        FileDownloader downloader = new FileDownloader(YoutubeDownload.this, downloadProgress, percentBar, title, contentLenght);
         String place = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 + "/" + title.concat(mimeType);
-
-        new Thread(() -> downloader.makeRequest(videoLink, place));
-    }
-
-    private void downloadVideo() {
-        try {
-            String titleLink = "d389f02b21f60630c52d";
-            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(videoLink));
-            request.allowScanningByMediaScanner();
-            request.setTitle(titleLink)
-                    .setDescription(titleLink.concat(" is dowloading...."))
-                    .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE)
-                    .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, titleLink + mimeType)
-                    .setVisibleInDownloadsUi(true)
-                    .setAllowedOverRoaming(true)
-                    .setAllowedOverMetered(true)
-                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-            manager.enqueue(request);
-        } catch (Exception e) {
-            Snack.bar(view, e.getMessage());
-        }
+        service.execute(() -> downloader.makeRequest(videoLink, place));
     }
 
     private void showWebView() {

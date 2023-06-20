@@ -2,8 +2,6 @@ package com.batsworks.simplewebview.services;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -16,15 +14,12 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 
 @SuppressLint("MissingPermission")
 public class FileDownloader {
 
     private static final int BUFFER_SIZE = 8192;
     private static final String TAG = "23";
-    private static int limitMessage = 0;
     private PushNotification pushNotification;
     private final ProgressBar progressBar;
     private final TextView textView;
@@ -34,7 +29,6 @@ public class FileDownloader {
     float totalBytesRead;
     private NotificationManagerCompat notificationManagerCompat;
     private NotificationCompat.Builder notificationBuilder;
-    private int ID = 14;
 
     public FileDownloader(Context context, ProgressBar progressBar, TextView percentBar, String title, float contentLeght) {
         this.context = context;
@@ -84,41 +78,44 @@ public class FileDownloader {
                     .setStyle(new androidx.media.app.NotificationCompat.MediaStyle());
 
             while ((bytesRead = is.read(buffer)) != -1) {
-                bos.write(buffer, 0, bytesRead);
-                totalBytesRead += bytesRead;
 
                 float contentSize = contentLenght >= 0 ? contentLength : contentLenght;
                 final double content_total_lenght = Math.floor(contentSize) / 1000000;
                 final int currentProgress = (int) ((((double) totalBytesRead) / ((double) contentSize)) * 100d);
 
-                Handler handler = new Handler(Looper.getMainLooper());
-                handler.post(() -> {
-                    int progress = (int) (totalBytesRead / contentSize * 100);
-
-                    if ((limitMessage % 2) == 0) {
-                        notificationManagerCompat = NotificationManagerCompat.from(context);
-                        notificationManagerCompat.notify(ID, notificationBuilder
-                                .setContentText(content_total_lenght + "/" + currentProgress + "\t\r" + progress + "%")
-                                .setProgress((int) content_total_lenght, (int) Math.min(progress, 100), false)
-                                .setOnlyAlertOnce(true)
-                                .setOngoing(true)
-                                .build());
-                    }
-                    limitMessage++;
-                    progressBar.setProgress((int) progress);
+//                Handler handler = new Handler(Looper.getMainLooper());
+//                handler.post(() -> {
+                int progress = (int) (totalBytesRead / contentSize * 100);
+                if ((content_total_lenght % 2) == 0) {
+                    notificationManagerCompat = NotificationManagerCompat.from(context);
+                    notificationManagerCompat.notify(2, notificationBuilder
+                            .setContentText(content_total_lenght + "/" + currentProgress + "\t\r" + progress + "%")
+                            .setProgress((int) content_total_lenght, (int) Math.min(progress, 100), false)
+                            .setOnlyAlertOnce(true)
+                            .setOngoing(true)
+                            .build());
+                }
+                progressBar.setProgress(progress);
+                if (progress > 0)
                     textView.setText(Math.min(currentProgress, 100));
-                });
+//                });
+                bos.write(buffer, 0, bytesRead);
+                totalBytesRead += bytesRead;
 
                 // Handler interruptions or cancellations here
             }
-            fos.close();
-            bos.close();
+
+            progressBar.setProgress(100);
             is.close();
+            fos.flush();
+            fos.close();
+            bos.flush();
+            bos.close();
+            connection.disconnect();
         } catch (Exception e) {
-            Log.i(TAG, e.getMessage() + "\n");
+            Log.i("24", e.getMessage() + "\n");
             e.printStackTrace();
         } finally {
-            limitMessage = 0;
             notificationManagerCompat = NotificationManagerCompat.from(context);
             notificationManagerCompat.notify(2, notificationBuilder
                     .setOngoing(true)
