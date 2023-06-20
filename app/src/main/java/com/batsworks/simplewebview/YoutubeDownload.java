@@ -7,28 +7,26 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.*;
-import android.util.Log;
-import android.util.SparseArray;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.StrictMode;
 import android.view.View;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
-import at.huber.youtubeExtractor.VideoMeta;
-import at.huber.youtubeExtractor.YouTubeExtractor;
-import at.huber.youtubeExtractor.YtFile;
+import com.batsworks.simplewebview.config.notification.Snack;
+import com.batsworks.simplewebview.config.recycle.BatAdapter;
 import com.batsworks.simplewebview.config.web.CallBack;
-import com.batsworks.simplewebview.notification.Snack;
+import com.batsworks.simplewebview.config.web.MyBrowserConfig;
+import com.batsworks.simplewebview.config.web.MyWebViewSetting;
 import com.batsworks.simplewebview.observable.Request;
 import com.batsworks.simplewebview.services.FileDownloader;
+import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -38,36 +36,37 @@ import static java.util.Objects.isNull;
 
 @SuppressLint({"StaticFieldLeak", "ServiceCast", "MissingPermission", "CheckResult"})
 public class YoutubeDownload extends AppCompatActivity {
-    private static final String ACTION_PAUSE = "actionpause";
-    private static final String ACTION_PLAY = "actionplay";
-    private static final int tag = 22;
+
+    private final ExecutorService downloadService = Executors.newSingleThreadExecutor();
+    private static final String TAG = "22";
     private static View view;
     private FileDownloader downloader;
     private EditText editText;
-    private AppCompatButton btnDownload, btnPreview;
+    private AppCompatButton btnDownload, btnPreview, btnSearch;
     private WebView webView;
     private ProgressBar progressBar, downloadProgress;
+    private Observable<Object> observable;
     private TextView percentBar;
     private String videoLink;
-    private String titleLink;
-    private ExecutorService downloadService = Executors.newSingleThreadExecutor();
-    private Observable<Object> observable;
+    private String mimeType;
+    private float contentLenght;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_youtube_download);
-        initComponents();
-        btnClick();
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
         view = findViewById(android.R.id.content);
+        initComponents();
+        btnClick();
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     private void initComponents() {
         editText = findViewById(R.id.input_url);
         btnPreview = findViewById(R.id.btn_preview);
+        btnSearch = findViewById(R.id.btn_search);
         btnDownload = findViewById(R.id.btn_download);
         webView = findViewById(R.id.download_webview);
         progressBar = findViewById(R.id.load_webview);
@@ -75,17 +74,19 @@ public class YoutubeDownload extends AppCompatActivity {
         percentBar = findViewById(R.id.percent_text);
 
         webView.setWebViewClient(new CallBack(progressBar));
-        WebSettings settings = webView.getSettings();
-        settings.setJavaScriptEnabled(true);
+        webView.setWebChromeClient(new MyBrowserConfig(YoutubeDownload.this.getWindow(), webView));
+        final MyWebViewSetting setting = new MyWebViewSetting(webView.getSettings());
+        setting.setting();
+        webView.setClickable(false);
         backgroundActions();
     }
 
     private void btnClick() {
-        btnDownload.setOnClickListener(click -> {
+        btnSearch.setOnClickListener(click -> {
+            progressBar.setVisibility(progressBar.getVisibility() == VISIBLE ? GONE : VISIBLE);
             if (!isNull(editText.getText())) {
                 downloadService.execute(() -> {
                     String request = Request.makeRequest(editText.getText().toString());
-
                     runOnUiThread(() -> {
                         Intent intent = new Intent(this, DownLoadOption.class);
                         intent.putExtra("class", request);
@@ -96,91 +97,44 @@ public class YoutubeDownload extends AppCompatActivity {
                 });
             }
         });
-        btnPreview.setOnClickListener(click -> {
-            if (!isNull(editText.getText())) {
-                if (videoLink == null) {
-                    extractVideo(editText.getText().toString(), 0);
-                } else {
-                    webView.loadUrl(videoLink);
-                }
+        btnDownload.setOnClickListener(click -> {
+            if (!isNull(videoLink)) {
+                webView.loadUrl(videoLink);
+                showWebView();
+                downloadVideo();
             }
         });
-    }
-
-    private void extractVideo(String videoUrl, int i) {
-        final ExecutorService service = Executors.newSingleThreadExecutor();
-        showWebView(i);
-        try {
-            new YouTubeExtractor(this) {
-                @Override
-                protected void onExtractionComplete(SparseArray<YtFile> files, VideoMeta videoMeta) {
-                    if (files != null) {
-                        try {
-                            Map<String, String> map = new HashMap<>();
-
-                            videoLink = files.get(tag).getUrl();
-
-                            observable = Observable.create(emitter -> {
-                                map.put("url", files.get(tag).getUrl());
-                                emitter.onNext(map);
-                            });
-
-                            observable.subscribe(make -> {
-                                        progressBar.setVisibility(GONE);
-                                        if (i == 1)
-                                            executeTask();
-                                        if (i == 0)
-                                            webView.loadUrl(videoLink);
-                                    }, throwable -> Snack.errorBar(view, throwable.getMessage()),
-                                    () -> {
-                                        if (i == 1)
-                                            Snack.bar(view, "Download start");
-                                        if (i == 0) {
-                                            Snack.bar(view, "Displaying webview");
-                                        }
-                                    });
-                        } catch (Exception e) {
-                            Snack.errorBar(view, e.getMessage());
-                        }
-                    }
-                }
-            }.executeOnExecutor(service, videoUrl);
-        } catch (Exception e) {
-            Snack.errorBar(view, e.getMessage());
-        }
+        btnPreview.setOnClickListener(click -> {
+            webView.loadUrl(videoLink);
+            showWebView();
+        });
     }
 
     private void executeTask() {
-        downloader = new FileDownloader(YoutubeDownload.this, downloadProgress, percentBar, titleLink);
+        String title = "d389f02b21f60630c52d";
+        downloader = new FileDownloader(YoutubeDownload.this, downloadProgress, percentBar, title, contentLenght);
         String place = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                + "/" + titleLink.concat(".mp4");
-        Handler handler = new Handler(Looper.getMainLooper());
+                + "/" + title.concat(mimeType);
 
-        downloadService.execute(new Runnable() {
-            @Override
-            public void run() {
-                downloader.makeRequest(videoLink, place);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                    }
+        @NonNull Void Void = null;
+        Observable<Void> observable = Observable.just(Void);
+
+        observable.subscribe(unused -> Snack.bar(view, "indo"),
+                Throwable::printStackTrace,
+                () -> {
+                    Snack.bar(view, "finalizado");
                 });
-            }
-        });
     }
 
     private void downloadVideo() {
         try {
-            if (videoLink == null) {
-                extractVideo(editText.getText().toString(), 1);
-                return;
-            }
+            String titleLink = "d389f02b21f60630c52d";
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(videoLink));
             request.allowScanningByMediaScanner();
             request.setTitle(titleLink)
                     .setDescription(titleLink.concat(" is dowloading...."))
                     .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE)
-                    .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, titleLink + ".mp4")
+                    .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, titleLink + mimeType)
                     .setVisibleInDownloadsUi(true)
                     .setAllowedOverRoaming(true)
                     .setAllowedOverMetered(true)
@@ -192,34 +146,52 @@ public class YoutubeDownload extends AppCompatActivity {
         }
     }
 
-    private void showWebView(int i) {
-        if (i == 0)
-            webView.setVisibility(webView.getVisibility() == VISIBLE ? GONE : VISIBLE);
-        downloadProgress.setIndeterminate(false);
+//    private void downloadVideo() {
+//        try {
+//            if (videoLink == null) {
+//                extractVideo(editText.getText().toString(), 1);
+//                return;
+//            }
+//            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(videoLink));
+//            request.allowScanningByMediaScanner();
+//            request.setTitle(titleLink)
+//                    .setDescription(titleLink.concat(" is dowloading...."))
+//                    .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE)
+//                    .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, titleLink + ".mp4")
+//                    .setVisibleInDownloadsUi(true)
+//                    .setAllowedOverRoaming(true)
+//                    .setAllowedOverMetered(true)
+//                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+//            DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+//            manager.enqueue(request);
+//        } catch (Exception e) {
+//            Snack.bar(view, e.getMessage());
+//        }
+//    }
+
+    private void showWebView() {
+        webView.setVisibility(webView.getVisibility() == VISIBLE ? GONE : VISIBLE);
+        downloadProgress.setVisibility(downloadProgress.getVisibility() == VISIBLE ? GONE : VISIBLE);
         progressBar.setVisibility(progressBar.getVisibility() == VISIBLE ? GONE : VISIBLE);
     }
 
     private void backgroundActions() {
         try {
             Intent intent = getIntent();
-            String action = intent.getStringExtra("ActionName");
-            if (action == null)
-                return;
-            if (action.equals(ACTION_PAUSE)) {
-                if (downloadService != null) {
-                    Log.i("51", downloadService.isTerminated() + "\n");
-                    showWebView(1);
-                    downloadService.shutdownNow();
-                    Snack.bar(view, "pausado com sucesso");
-                }
+            String mime = intent.getStringExtra("mime");
+            String url = intent.getStringExtra("url");
+            String size = intent.getStringExtra("size");
+
+            if (url == null || url.trim().equals("")) {
+                btnPreview.setVisibility(GONE);
+                btnDownload.setVisibility(GONE);
                 return;
             }
 
-            if (action.equals(ACTION_PLAY)) {
-                if (downloadService == null) {
-                    extractVideo(videoLink, 1);
-                }
-            }
+            videoLink = url;
+            mimeType = mime.contains(BatAdapter.MediaType.MP4.getMedia()) ? BatAdapter.MediaType.MP4.getMedia() : BatAdapter.MediaType.WEBM.getMedia();
+            contentLenght = Float.parseFloat(size);
+            mimeType = "." + mimeType;
         } catch (Exception e) {
             e.printStackTrace();
             Snack.bar(view, e.getMessage());
@@ -228,20 +200,11 @@ public class YoutubeDownload extends AppCompatActivity {
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
         ClipboardManager manager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
         if (manager.hasPrimaryClip()) {
             ClipData.Item item = manager.getPrimaryClip().getItemAt(0);
             editText.setText(item.getText().toString());
-        }
-        super.onWindowFocusChanged(hasFocus);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (downloadService != null) {
-            downloadService.shutdown();
-            downloadService = null;
         }
     }
 

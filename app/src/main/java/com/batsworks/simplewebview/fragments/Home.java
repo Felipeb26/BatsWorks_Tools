@@ -1,16 +1,17 @@
 package com.batsworks.simplewebview.fragments;
 
 import android.animation.LayoutTransition;
+import android.content.Intent;
 import android.graphics.ColorFilter;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
+import android.net.Uri;
 import android.os.Bundle;
 import android.transition.AutoTransition;
 import android.transition.TransitionManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -18,12 +19,6 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import com.batsworks.simplewebview.R;
-import com.batsworks.simplewebview.config.web.CallBack;
-import com.batsworks.simplewebview.config.web.MyBrowserConfig;
-import com.batsworks.simplewebview.config.web.MyWebViewSetting;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class Home extends Fragment {
 
@@ -31,7 +26,7 @@ public class Home extends Fragment {
     private CardView aboutCard;
     private TextView textDetails;
     private LinearLayout linearAbout;
-    private WebView linkedinCard, githubCard;
+    private ImageView githubCard, linkedinCard, whatsappCard, gmailCard;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -57,25 +52,18 @@ public class Home extends Fragment {
 
         githubCard = view.findViewById(R.id.github_card);
         linkedinCard = view.findViewById(R.id.linkedin_card);
+        whatsappCard = view.findViewById(R.id.whatsapp_card);
+        gmailCard = view.findViewById(R.id.gmail_card);
 
         linearAbout.getLayoutTransition().enableTransitionType(LayoutTransition.CHANGING);
 
     }
 
     private void configWebViewCard() {
-        githubCard.loadUrl("https://github.com/Felipeb26");
-        linkedinCard.loadUrl("https://www.linkedin.com/in/felipe-batista-9b0122189/");
-
-        List<WebView> webViews = Arrays.asList(linkedinCard, githubCard);
-
-        webViews.forEach(webView -> {
-            webView.setWebViewClient(new CallBack());
-            webView.setWebChromeClient(new MyBrowserConfig(requireActivity().getWindow(), webView));
-            final MyWebViewSetting setting = new MyWebViewSetting(webView.getSettings());
-            setting.view();
-            setting.setting();
-        });
-
+        linkedinCard.setOnClickListener(click -> goTo("https://www.linkedin.com/in/felipe-batista-9b0122189/"));
+        githubCard.setOnClickListener(click -> goTo("https://github.com/Felipeb26"));
+        whatsappCard.setOnClickListener(click -> goTo("https://wa.me//5511971404157?text=Evite%20enviar%20mensagem%20com%20conteudo%20ofensivo"));
+        gmailCard.setOnClickListener(click-> goTo("mailto:felipeb2silva@gmail.com"));
     }
 
     private void clickElements() {
@@ -110,6 +98,10 @@ public class Home extends Fragment {
 
         ColorFilter colorFilter = new ColorMatrixColorFilter(colorMatrix);
         logoImageView.setColorFilter(colorFilter);
+    }
+
+    private void goTo(String s) {
+        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(s)));
     }
 
 }

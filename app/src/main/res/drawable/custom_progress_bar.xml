@@ -3,24 +3,28 @@
 
     <item android:id="@android:id/background">
         <shape
-            android:shape="ring"
-            android:thickness="15dp"
-            android:useLevel="false">
+                android:shape="ring"
+                android:thickness="15dp"
+                android:useLevel="false">
 
             <gradient
-                android:endColor="@color/white"
-                android:startColor="@color/cyan" />
+                    android:startColor="@color/cyan_mid"
+                    android:centerColor="@color/cyan"
+                    android:endColor="@color/white"
+            />
         </shape>
     </item>
 
     <item android:id="@android:id/progress">
         <shape
-            android:shape="ring"
-            android:thickness="5dp"
-            android:useLevel="true">
+                android:shape="ring"
+                android:thickness="5dp"
+                android:useLevel="true">
             <gradient
-                android:endColor="@color/white"
-                android:startColor="@color/cyan" />
+                    android:startColor="@color/green_neon"
+                    android:centerColor="@color/cyan"
+                    android:endColor="@color/white"
+            />
         </shape>
     </item>
 

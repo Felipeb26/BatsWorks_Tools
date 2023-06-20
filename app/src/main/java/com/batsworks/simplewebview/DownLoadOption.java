@@ -2,14 +2,17 @@ package com.batsworks.simplewebview;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.batsworks.simplewebview.config.notification.Snack;
 import com.batsworks.simplewebview.config.recycle.BatAdapter;
 import com.batsworks.simplewebview.model.AdaptiveFormatsModel;
 import com.batsworks.simplewebview.model.DataToUse;
 import com.batsworks.simplewebview.model.FormatsModel;
 import com.batsworks.simplewebview.model.YoutubeModel;
+import com.batsworks.simplewebview.services.RecyclerListListener;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,19 +23,22 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class DownLoadOption extends AppCompatActivity {
+public class DownLoadOption extends AppCompatActivity implements RecyclerListListener {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private YoutubeModel youtubeModel;
     private List<DataToUse> dataToUseList;
     private RecyclerView recyclerView;
     private BatAdapter adapter;
+    private View view;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_download_option);
         String youtube = getIntent().getStringExtra("class");
+        view = findViewById(android.R.id.content);
         initComponents();
 
         configRecycleView(youtube);
@@ -45,24 +51,22 @@ public class DownLoadOption extends AppCompatActivity {
 
     @SuppressLint("CheckResult")
     private void configRecycleView(String youtube) {
-
         dataToUseList = new ArrayList<>();
-        adapter = new BatAdapter(DownLoadOption.this, dataToUseList);
+        adapter = new BatAdapter(DownLoadOption.this, dataToUseList, this);
         recyclerView.setLayoutManager(new LinearLayoutManager(DownLoadOption.this));
         recyclerView.setAdapter(adapter);
 
         Observable<List<DataToUse>> observable = Observable.just(dataToUseList);
-
         observable.subscribe(sub -> youtubeToData(youtube),
-                Throwable::printStackTrace,
+                error -> {
+                    Snack.bar(view, error.getMessage());
+                },
                 () -> {
-                    adapter = new BatAdapter(DownLoadOption.this, dataToUseList);
+                    adapter = new BatAdapter(DownLoadOption.this, dataToUseList, this);
                     recyclerView.setAdapter(adapter);
                     adapter.notifyDataSetChanged();
                 }
         );
-
-
     }
 
     private void youtubeToData(String youtube) throws JsonProcessingException {
@@ -107,4 +111,8 @@ public class DownLoadOption extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onItemClick(int position) {
+
+    }
 }

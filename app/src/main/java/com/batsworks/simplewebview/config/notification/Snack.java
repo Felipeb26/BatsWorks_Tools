@@ -1,4 +1,4 @@
-package com.batsworks.simplewebview.notification;
+package com.batsworks.simplewebview.config.notification;
 
 import android.annotation.SuppressLint;
 import android.graphics.Color;

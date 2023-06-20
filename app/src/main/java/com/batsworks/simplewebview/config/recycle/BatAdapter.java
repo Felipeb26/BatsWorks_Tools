@@ -1,6 +1,7 @@
 package com.batsworks.simplewebview.config.recycle;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -8,22 +9,25 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.batsworks.simplewebview.R;
+import com.batsworks.simplewebview.YoutubeDownload;
 import com.batsworks.simplewebview.model.DataToUse;
+import com.batsworks.simplewebview.services.RecyclerListListener;
 import org.jetbrains.annotations.NotNull;
 
 import java.text.DecimalFormat;
 import java.time.Duration;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class BatAdapter extends RecyclerView.Adapter<BatHolder> {
 
+    private final RecyclerListListener recyclerListListener;
     private final Context context;
     private final List<DataToUse> dataList;
 
-    public BatAdapter(Context context, List<DataToUse> dataToUse) {
+    public BatAdapter(Context context, List<DataToUse> dataToUse, RecyclerListListener recyclerListener) {
         this.context = context;
         this.dataList = dataToUse;
+        this.recyclerListListener = recyclerListener;
     }
 
     @NotNull
@@ -52,6 +56,14 @@ public class BatAdapter extends RecyclerView.Adapter<BatHolder> {
         ifNullSetStyle(audioQuality, batHolder.audioQuality);
 
         automaticScroll(batHolder.urlText);
+
+        batHolder.cardView.setOnClickListener(click -> {
+            Intent intent = new Intent(context, YoutubeDownload.class);
+            intent.putExtra("url", dataList.get(batHolder.getAdapterPosition()).getUrl());
+            intent.putExtra("size", dataList.get(batHolder.getAdapterPosition()).getContentLength());
+            intent.putExtra("mime", dataList.get(batHolder.getAdapterPosition()).getMimeType());
+            context.startActivity(intent);
+        });
     }
 
 
@@ -86,8 +98,6 @@ public class BatAdapter extends RecyclerView.Adapter<BatHolder> {
 
     private static String formatDuration(String time) {
         Duration duration = Duration.ofMillis(Long.parseLong(time));
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-
         String finalTime = duration.toMillis() >= 0 ? duration.toString().substring(2).replaceAll("(\\d[HMS])(?!$)", "$1:")
                 : "-" + duration.toString().substring(3).replaceAll("(\\d[HMS])(?!$)", "$1:");
 
@@ -119,7 +129,7 @@ public class BatAdapter extends RecyclerView.Adapter<BatHolder> {
         urlText.setTextColor(0xFc39FF14);
     }
 
-    enum MediaType {
+   public enum MediaType {
         UNSPECIFIED("UNSPECIFIED"),
         MP4("MP4"),
         WEBM("MP3");
@@ -131,7 +141,7 @@ public class BatAdapter extends RecyclerView.Adapter<BatHolder> {
         }
 
         public String getMedia() {
-            return media;
+            return media.toLowerCase();
         }
 
     }
