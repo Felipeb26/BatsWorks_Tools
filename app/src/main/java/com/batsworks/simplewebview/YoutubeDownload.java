@@ -24,7 +24,6 @@ import com.batsworks.simplewebview.config.web.MyBrowserConfig;
 import com.batsworks.simplewebview.config.web.MyWebViewSetting;
 import com.batsworks.simplewebview.observable.Request;
 import com.batsworks.simplewebview.services.FileDownloader;
-import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
 
 import java.util.concurrent.ExecutorService;
@@ -101,7 +100,7 @@ public class YoutubeDownload extends AppCompatActivity {
             if (!isNull(videoLink)) {
                 webView.loadUrl(videoLink);
                 showWebView();
-                downloadVideo();
+                executeTask();
             }
         });
         btnPreview.setOnClickListener(click -> {
@@ -116,14 +115,7 @@ public class YoutubeDownload extends AppCompatActivity {
         String place = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 + "/" + title.concat(mimeType);
 
-        @NonNull Void Void = null;
-        Observable<Void> observable = Observable.just(Void);
-
-        observable.subscribe(unused -> Snack.bar(view, "indo"),
-                Throwable::printStackTrace,
-                () -> {
-                    Snack.bar(view, "finalizado");
-                });
+        new Thread(() -> downloader.makeRequest(videoLink, place));
     }
 
     private void downloadVideo() {
@@ -145,29 +137,6 @@ public class YoutubeDownload extends AppCompatActivity {
             Snack.bar(view, e.getMessage());
         }
     }
-
-//    private void downloadVideo() {
-//        try {
-//            if (videoLink == null) {
-//                extractVideo(editText.getText().toString(), 1);
-//                return;
-//            }
-//            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(videoLink));
-//            request.allowScanningByMediaScanner();
-//            request.setTitle(titleLink)
-//                    .setDescription(titleLink.concat(" is dowloading...."))
-//                    .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE)
-//                    .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, titleLink + ".mp4")
-//                    .setVisibleInDownloadsUi(true)
-//                    .setAllowedOverRoaming(true)
-//                    .setAllowedOverMetered(true)
-//                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-//            DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-//            manager.enqueue(request);
-//        } catch (Exception e) {
-//            Snack.bar(view, e.getMessage());
-//        }
-//    }
 
     private void showWebView() {
         webView.setVisibility(webView.getVisibility() == VISIBLE ? GONE : VISIBLE);
