@@ -2,11 +2,11 @@ package com.batsworks.simplewebview.config.web;
 
 import android.graphics.Bitmap;
 import android.view.View;
-import android.webkit.CookieManager;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.webkit.*;
 import android.widget.ProgressBar;
+import androidx.annotation.Nullable;
+
+import java.io.InputStream;
 
 public class CallBack extends WebViewClient {
 
@@ -53,4 +53,14 @@ public class CallBack extends WebViewClient {
         view.loadUrl(request.getUrl().toString());
         return true;
     }
+
+    @Nullable
+    @Override
+    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+        String url = String.valueOf(request.getUrl());
+        if (!url.contains("google") || !url.contains("facebook"))
+            return super.shouldInterceptRequest(view, request);
+        return null;
+    }
+
 }

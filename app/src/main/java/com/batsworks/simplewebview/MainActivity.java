@@ -66,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private FloatingActionButton actionButton;
     private IntObservable intObservable;
     private BroadcastReceiver notificationReceiver, internetReceiver;
+    int doubleClick = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,7 +107,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void btnClick() {
-        actionButton.setOnClickListener(click -> showDialog());
+        Handler handler = new Handler(Looper.getMainLooper());
+        actionButton.setOnClickListener(click -> {
+            doubleClick++;
+            handler.postDelayed(() -> {
+                if (doubleClick == 1) {
+                    showDialog();
+                    doubleClick = 0;
+                }
+            }, 500);
+        });
     }
 
     private void checkingInternetStatus() {
@@ -117,7 +127,14 @@ public class MainActivity extends AppCompatActivity {
     private final NavigationBarView.OnItemSelectedListener navListener = item -> {
         switch (item.getItemId()) {
             case R.id.placeholder:
-                showDialog();
+                Handler handler = new Handler(Looper.getMainLooper());
+                doubleClick++;
+                handler.postDelayed(() -> {
+                    if (doubleClick == 1) {
+                        showDialog();
+                        doubleClick = 0;
+                    }
+                }, 500);
                 break;
             case R.id.nav_home:
                 replaceFragment(new Home());

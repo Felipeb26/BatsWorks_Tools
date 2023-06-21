@@ -1,15 +1,11 @@
 package com.batsworks.simplewebview;
 
 import android.annotation.SuppressLint;
-import android.app.DownloadManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.StrictMode;
+import android.os.*;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.EditText;
@@ -17,15 +13,16 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
-import com.batsworks.simplewebview.config.notification.Snack;
 import com.batsworks.simplewebview.config.recycle.BatAdapter;
 import com.batsworks.simplewebview.config.web.CallBack;
 import com.batsworks.simplewebview.config.web.MyBrowserConfig;
 import com.batsworks.simplewebview.config.web.MyWebViewSetting;
+import com.batsworks.simplewebview.notification.BatsAlertDialog;
+import com.batsworks.simplewebview.notification.Snack;
 import com.batsworks.simplewebview.observable.Request;
 import com.batsworks.simplewebview.services.FileDownloader;
-import io.reactivex.rxjava3.core.Observable;
 
+import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -40,10 +37,9 @@ public class YoutubeDownload extends AppCompatActivity {
     private static final String TAG = "22";
     private static View view;
     private EditText editText;
-    private AppCompatButton btnDownload, btnPreview, btnSearch;
+    private AppCompatButton btnDownload, btnPreview, btnSearch, btnClean;
     private WebView webView;
     private ProgressBar progressBar, downloadProgress;
-    private Observable<Object> observable;
     private TextView percentBar;
     private String videoLink;
     private String mimeType;
@@ -70,6 +66,7 @@ public class YoutubeDownload extends AppCompatActivity {
         progressBar = findViewById(R.id.load_webview);
         downloadProgress = findViewById(R.id.download_progress);
         percentBar = findViewById(R.id.percent_text);
+        btnClean = findViewById(R.id.btn_clean);
 
         webView.setWebViewClient(new CallBack(progressBar));
         webView.setWebChromeClient(new MyBrowserConfig(YoutubeDownload.this.getWindow(), webView));
@@ -81,39 +78,76 @@ public class YoutubeDownload extends AppCompatActivity {
 
     private void btnClick() {
         btnSearch.setOnClickListener(click -> {
-            progressBar.setVisibility(progressBar.getVisibility() == VISIBLE ? GONE : VISIBLE);
-            if (!isNull(editText.getText())) {
-                downloadService.execute(() -> {
-                    String request = Request.makeRequest(editText.getText().toString());
-                    runOnUiThread(() -> {
-                        Intent intent = new Intent(this, DownLoadOption.class);
-                        intent.putExtra("class", request);
-                        Snack.bar(view, "Select An option");
-                        startActivity(intent);
-                    });
-                });
+            if (isNull(editText.getText()) || !editText.getText().toString().contains("youtu")) {
+                Snack.errorBar(view, "Url precisa pertencer ao site https://youtube.com");
+                return;
             }
+            progressBar.setVisibility(progressBar.getVisibility() == VISIBLE ? GONE : VISIBLE);
+            downloadService.execute(() -> {
+                String request = Request.makeRequest(editText.getText().toString());
+                runOnUiThread(() -> {
+                    BatsAlertDialog.alert(this, "Atencao",
+                            "necessario selecionar um item para o download,\napos iniciar o download não feche o app.",
+                            request, this::showDowloandList);
+                });
+            });
         });
         btnDownload.setOnClickListener(click -> {
-            if (!isNull(videoLink)) {
-                webView.loadUrl(videoLink);
-                showWebView();
-                executeTask();
+            if (isNull(videoLink)) {
+                Snack.errorBar(view, "Url não localizada para download");
+                return;
             }
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(() ->{
+                btnDownload.setEnabled(false);
+            });
+            webView.loadUrl(videoLink);
+            showWebView();
+            executeTask();
         });
         btnPreview.setOnClickListener(click -> {
+            if (isNull(videoLink)) {
+                Snack.errorBar(view, "Url não localizada para download");
+                return;
+            }
             webView.loadUrl(videoLink);
             showWebView();
         });
+        btnClean.setOnClickListener(click -> {
+            contentLenght = 0;
+            videoLink = null;
+            mimeType = null;
+            webView.loadUrl("");
+            editText.setText("");
+            btnPreview.setVisibility(GONE);
+            btnDownload.setVisibility(GONE);
+            btnClean.setVisibility(GONE);
+        });
+    }
+
+    private Void showDowloandList(String request) {
+        Intent intent = new Intent(this, DownLoadOption.class);
+        intent.putExtra("class", request);
+        startActivity(intent);
+        return null;
     }
 
     private void executeTask() {
-        ExecutorService service = Executors.newFixedThreadPool(3);
+        String path = mimeType.equals(BatAdapter.MediaType.MP4.getMedia()) ? "/videos/" : "/musics/";
+        ExecutorService service = Executors.newSingleThreadExecutor();
         String title = "d389f02b21f60630c52d";
+        findFolder(path);
         FileDownloader downloader = new FileDownloader(YoutubeDownload.this, downloadProgress, percentBar, title, contentLenght);
-        String place = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                + "/" + title.concat(mimeType);
+        String place = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + path + title.concat(mimeType);
         service.execute(() -> downloader.makeRequest(videoLink, place));
+    }
+
+    private void findFolder(String path) {
+        final String finalPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + path;
+        File folder = new File(finalPath);
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
     }
 
     private void showWebView() {
@@ -132,6 +166,7 @@ public class YoutubeDownload extends AppCompatActivity {
             if (url == null || url.trim().equals("")) {
                 btnPreview.setVisibility(GONE);
                 btnDownload.setVisibility(GONE);
+                btnClean.setVisibility(GONE);
                 return;
             }
 

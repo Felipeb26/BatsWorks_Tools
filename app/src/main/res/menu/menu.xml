@@ -7,11 +7,11 @@
         <item
             android:id="@+id/nav_home"
             android:icon="@drawable/home_icon"
-            android:title="home" />
+            android:title="Home" />
         <item
             android:id="@+id/nav_admin"
             android:icon="@drawable/admin_icon"
-            android:title="BatsWorks Admin" />
+            android:title="Admin" />
         <item
             android:id="@+id/placeholder"
             android:title="" />

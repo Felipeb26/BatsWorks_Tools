@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.batsworks.simplewebview.R;
 import com.batsworks.simplewebview.YoutubeDownload;
 import com.batsworks.simplewebview.model.DataToUse;
-import com.batsworks.simplewebview.services.RecyclerListListener;
 import org.jetbrains.annotations.NotNull;
 
 import java.text.DecimalFormat;

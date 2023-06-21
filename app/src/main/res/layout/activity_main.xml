@@ -15,6 +15,7 @@
 
 
     <com.google.android.material.bottomappbar.BottomAppBar
+            android:theme="@style/BottomAppBar"
             android:layout_width="match_parent"
             android:layout_height="53dp"
             android:id="@+id/bottom_bar"
@@ -38,7 +39,7 @@
             android:layout_height="wrap_content"
             app:layout_anchor="@id/bottom_bar"
             android:src="@drawable/batsworks"
-            android:scaleType="centerCrop"
+            app:maxImageSize="45dp"
             android:id="@+id/float_btn"
     />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

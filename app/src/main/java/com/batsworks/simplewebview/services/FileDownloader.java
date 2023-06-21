@@ -2,18 +2,22 @@ package com.batsworks.simplewebview.services;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
-import com.batsworks.simplewebview.config.notification.PushNotification;
+import com.batsworks.simplewebview.config.Format;
+import com.batsworks.simplewebview.notification.PushNotification;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Locale;
 
 @SuppressLint("MissingPermission")
 public class FileDownloader {
@@ -73,54 +77,52 @@ public class FileDownloader {
             byte[] buffer = new byte[BUFFER_SIZE];
             int bytesRead;
             notificationBuilder = pushNotification.create(context, title, "Downloading....");
-            notificationBuilder
-                    .setOnlyAlertOnce(true)
-                    .setStyle(new androidx.media.app.NotificationCompat.MediaStyle());
+            int lenght = 2;
 
             while ((bytesRead = is.read(buffer)) != -1) {
-
-                float contentSize = contentLenght >= 0 ? contentLength : contentLenght;
-                final double content_total_lenght = Math.floor(contentSize) / 1000000;
-                final int currentProgress = (int) ((((double) totalBytesRead) / ((double) contentSize)) * 100d);
-
-//                Handler handler = new Handler(Looper.getMainLooper());
-//                handler.post(() -> {
-                int progress = (int) (totalBytesRead / contentSize * 100);
-                if ((content_total_lenght % 2) == 0) {
-                    notificationManagerCompat = NotificationManagerCompat.from(context);
-                    notificationManagerCompat.notify(2, notificationBuilder
-                            .setContentText(content_total_lenght + "/" + currentProgress + "\t\r" + progress + "%")
-                            .setProgress((int) content_total_lenght, (int) Math.min(progress, 100), false)
-                            .setOnlyAlertOnce(true)
-                            .setOngoing(true)
-                            .build());
-                }
-                progressBar.setProgress(progress);
-                if (progress > 0)
-                    textView.setText(Math.min(currentProgress, 100));
-//                });
                 bos.write(buffer, 0, bytesRead);
                 totalBytesRead += bytesRead;
+                float contentSize = contentLenght >= 0 ? contentLength : contentLenght;
+                double content_total_lenght = Math.floor(contentSize) / 1000000;
+                int progress = (int) (totalBytesRead / contentSize * 100);
+
+                Handler handler = new Handler(Looper.getMainLooper());
+                int finalLenght = lenght;
+                handler.post(() -> {
+                    if ((finalLenght % 2) == 0) {
+                        notificationManagerCompat = NotificationManagerCompat.from(context);
+                        notificationManagerCompat.notify(2, notificationBuilder
+                                .setContentText(String.format(Locale.ROOT, "%.2f/%.2f\t%s", content_total_lenght, Format.bytesToMB(totalBytesRead), progress) + "%")
+                                .setProgress((int) content_total_lenght, (int) Math.min(Format.bytesToMB(totalBytesRead), 100), false)
+                                .setOnlyAlertOnce(true)
+                                .setOngoing(true)
+                                .build());
+                    }
+                });
+                lenght++;
+                progressBar.setProgress(progress);
+                if (progress > 0)
+                    textView.setText(String.valueOf(Math.min(progress, 100)));
 
                 // Handler interruptions or cancellations here
             }
 
             progressBar.setProgress(100);
-            is.close();
-            fos.flush();
-            fos.close();
             bos.flush();
             bos.close();
-            connection.disconnect();
+            fos.flush();
+            fos.close();
+            is.close();
         } catch (Exception e) {
             Log.i("24", e.getMessage() + "\n");
             e.printStackTrace();
         } finally {
+            connection.disconnect();
             notificationManagerCompat = NotificationManagerCompat.from(context);
             notificationManagerCompat.notify(2, notificationBuilder
-                    .setOngoing(true)
                     .setContentText("Download have finish")
                     .setProgress((int) 100, 100, false)
+                    .setOngoing(true)
                     .build());
         }
         return null;

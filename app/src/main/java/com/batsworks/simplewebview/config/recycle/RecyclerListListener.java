@@ -1,4 +1,4 @@
-package com.batsworks.simplewebview.services;
+package com.batsworks.simplewebview.config.recycle;
 
 public interface RecyclerListListener {
 

@@ -11,8 +11,7 @@
         android:layout_height="wrap_content"
         android:text="more Options"
         android:textAlignment="center"
-        android:textAllCaps="true"
-        android:textColor="@color/black"
+        style="@style/ButtonTextStyle"
         android:textSize="20sp"
         android:textStyle="bold|italic" />
 

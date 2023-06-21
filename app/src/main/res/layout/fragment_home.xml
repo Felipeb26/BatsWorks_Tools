@@ -6,17 +6,17 @@
               android:layout_height="match_parent"
               android:fillViewport="true"
               android:orientation="vertical"
+              android:background="@drawable/background"
               android:padding="10dp"
               tools:ignore="ScrollViewSize">
 
     <com.google.android.material.card.MaterialCardView
+            android:id="@+id/logo_card"
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:layout_marginTop="25dp"
             android:backgroundTint="@color/black"
             android:elevation="15dp"
-            app:strokeWidth="3dp"
-            app:strokeColor="@color/white"
             app:cardCornerRadius="15dp">
 
         <ImageView
@@ -53,8 +53,6 @@
                             android:layout_height="190dp"
                             android:layout_marginEnd="5dp"
                             android:elevation="10dp"
-                            app:strokeWidth="3dp"
-                            app:strokeColor="@color/white"
                             app:cardCornerRadius="15dp">
                         <ImageView
                                 android:id="@+id/github_card"
@@ -69,8 +67,8 @@
                             android:layout_height="190dp"
                             android:layout_marginStart="5dp"
                             android:elevation="10dp"
-                            app:strokeWidth="3dp"
-                            app:strokeColor="@color/white"
+
+
                             app:cardCornerRadius="15dp">
                         <ImageView
                                 android:id="@+id/linkedin_card"
@@ -128,8 +126,8 @@
                             android:layout_height="190dp"
                             android:layout_marginEnd="5dp"
                             android:elevation="10dp"
-                            app:strokeWidth="3dp"
-                            app:strokeColor="@color/white"
+
+
                             app:cardCornerRadius="15dp">
                         <ImageView
                                 android:id="@+id/whatsapp_card"
@@ -145,8 +143,6 @@
                             android:layout_height="190dp"
                             android:layout_marginEnd="5dp"
                             android:elevation="10dp"
-                            app:strokeWidth="3dp"
-                            app:strokeColor="@color/white"
                             app:cardCornerRadius="15dp">
 
                         <ImageView
@@ -164,11 +160,10 @@
                     android:id="@+id/card_about"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/border"
                     android:elevation="15dp"
                     app:cardCornerRadius="15dp"
-                    app:strokeWidth="3dp"
-                    app:strokeColor="@color/white"
+
+
                     app:contentPadding="10dp"
                     android:layout_marginTop="20dp"
                     android:layout_marginBottom="70dp">
@@ -178,7 +173,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:animateLayoutChanges="true"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:paddingHorizontal="15dp">
 
                     <TextView
                             android:layout_width="match_parent"
@@ -190,6 +186,7 @@
                             android:textStyle="bold|italic"/>
 
                     <TextView
+                            android:layout_marginVertical="15dp"
                             android:id="@+id/details"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -201,8 +198,6 @@
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </ScrollView>
-
-
 
 
 </LinearLayout>

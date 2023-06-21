@@ -28,4 +28,9 @@
         <item name="android:textAllCaps">true</item>
     </style>
 
+    <style name="BottomAppBar">
+        <item name="colorPrimary">@color/cyan_mid</item>
+        <item name="colorSecondary">@color/gray</item>
+    </style>
+
 </resources>
