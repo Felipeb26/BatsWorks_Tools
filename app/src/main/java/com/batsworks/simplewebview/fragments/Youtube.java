@@ -2,6 +2,7 @@ package com.batsworks.simplewebview.fragments;
 
 import android.annotation.SuppressLint;
 import android.app.PictureInPictureParams;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,10 +15,12 @@ import androidx.fragment.app.Fragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.batsworks.simplewebview.R;
+import com.batsworks.simplewebview.config.web.AdBlocker;
 import com.batsworks.simplewebview.config.web.CallBack;
 import com.batsworks.simplewebview.config.web.MyBrowserConfig;
 import com.batsworks.simplewebview.config.web.MyWebViewSetting;
 import com.batsworks.simplewebview.observable.IntObservable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Observer;
 
@@ -39,6 +42,7 @@ public class Youtube extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         View view = inflater.inflate(R.layout.fragment_youtube, container, false);
         initComponents(view);
         swipeRefresh();
@@ -55,7 +59,8 @@ public class Youtube extends Fragment {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private void initComponents(View view) {
+    private void initComponents(@NotNull View view) {
+        AdBlocker.init(getContext());
         webView = view.findViewById(R.id.youtube_webview);
         progressBar = view.findViewById(R.id.youtube_progress);
         swipeRefreshLayout = view.findViewById(R.id.youtube_refresh);

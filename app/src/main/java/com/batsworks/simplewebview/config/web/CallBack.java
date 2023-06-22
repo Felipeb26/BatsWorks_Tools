@@ -6,7 +6,8 @@ import android.webkit.*;
 import android.widget.ProgressBar;
 import androidx.annotation.Nullable;
 
-import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CallBack extends WebViewClient {
 
@@ -54,13 +55,20 @@ public class CallBack extends WebViewClient {
         return true;
     }
 
+    private final Map<String, Boolean> loadedUrls = new HashMap<>();
+
     @Nullable
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-        String url = String.valueOf(request.getUrl());
-        if (!url.contains("google") || !url.contains("facebook"))
-            return super.shouldInterceptRequest(view, request);
-        return null;
+        boolean ad;
+        String url = request.getUrl().toString();
+        if (!loadedUrls.containsKey(url)) {
+            ad = AdBlocker.isAd(url);
+            loadedUrls.put(url, ad);
+        } else {
+            ad = loadedUrls.get(url);
+        }
+        return ad ? AdBlocker.createEmptyResource() : super.shouldInterceptRequest(view, request);
     }
 
 }

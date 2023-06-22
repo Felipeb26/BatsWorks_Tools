@@ -1,7 +1,10 @@
 package com.batsworks.simplewebview.fragments;
 
 import android.animation.LayoutTransition;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.ColorFilter;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
@@ -42,9 +45,11 @@ public class Home extends Fragment {
         super.onCreate(savedInstanceState);
     }
 
+    @SuppressLint("SourceLockedOrientationActivity")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
+        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         initComponents(view);
         increaseBright();
         clickElements();

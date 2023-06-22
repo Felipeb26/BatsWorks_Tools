@@ -5,6 +5,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.*;
 import android.view.View;
 import android.webkit.WebView;
@@ -36,7 +37,7 @@ public class YoutubeDownload extends AppCompatActivity {
     private final ExecutorService downloadService = Executors.newSingleThreadExecutor();
     private static final String TAG = "22";
     private static View view;
-    private EditText editText;
+    private EditText editText, textFileName;
     private AppCompatButton btnDownload, btnPreview, btnSearch, btnClean;
     private WebView webView;
     private ProgressBar progressBar, downloadProgress;
@@ -49,6 +50,7 @@ public class YoutubeDownload extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_youtube_download);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
         view = findViewById(android.R.id.content);
@@ -67,6 +69,7 @@ public class YoutubeDownload extends AppCompatActivity {
         downloadProgress = findViewById(R.id.download_progress);
         percentBar = findViewById(R.id.percent_text);
         btnClean = findViewById(R.id.btn_clean);
+        textFileName = findViewById(R.id.text_file_name);
 
         webView.setWebViewClient(new CallBack(progressBar));
         webView.setWebChromeClient(new MyBrowserConfig(YoutubeDownload.this.getWindow(), webView));
@@ -98,7 +101,7 @@ public class YoutubeDownload extends AppCompatActivity {
                 return;
             }
             Handler handler = new Handler(Looper.getMainLooper());
-            handler.post(() ->{
+            handler.post(() -> {
                 btnDownload.setEnabled(false);
             });
             webView.loadUrl(videoLink);
@@ -133,9 +136,10 @@ public class YoutubeDownload extends AppCompatActivity {
     }
 
     private void executeTask() {
-        String path = mimeType.equals(BatAdapter.MediaType.MP4.getMedia()) ? "/videos/" : "/musics/";
-        ExecutorService service = Executors.newSingleThreadExecutor();
-        String title = "d389f02b21f60630c52d";
+        String path = mimeType.contains(BatAdapter.MediaType.MP4.getMedia()) ? "/videos/" : "/musics/";
+        ExecutorService service = Executors.newFixedThreadPool(2);
+        String title = textFileName.getText() == null ? "batsworks_download" : textFileName.getText().toString();
+        title = title.trim().equals("") ? "batsworks_download" : title;
         findFolder(path);
         FileDownloader downloader = new FileDownloader(YoutubeDownload.this, downloadProgress, percentBar, title, contentLenght);
         String place = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + path + title.concat(mimeType);
@@ -192,7 +196,7 @@ public class YoutubeDownload extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
+        startActivity(new Intent(this, MainActivity.class));
     }
 
 }

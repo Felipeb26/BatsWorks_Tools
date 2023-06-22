@@ -19,9 +19,6 @@
             android:layout_width="match_parent"
             android:layout_height="53dp"
             android:id="@+id/bottom_bar"
-            app:fabCradleMargin="10dp"
-            app:fabCradleRoundedCornerRadius="10dp"
-            app:fabCradleVerticalOffset="10dp"
             android:layout_gravity="bottom"
     >
         <com.google.android.material.bottomnavigation.BottomNavigationView

@@ -10,23 +10,49 @@
                 tools:context=".YoutubeDownload"
                 tools:ignore="HardcodedText">
 
-    <EditText
-            android:id="@+id/input_url"
-            android:layout_centerHorizontal="true"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:hint="Youtube URL"
-            android:layout_marginVertical="45dp"
-            android:paddingHorizontal="15dp"
-            android:inputType="textUri"
-            android:textColorHint="@color/gray"
-            style="@style/ButtonTextStyle"
-            android:textColor="@color/black"
-            android:textSize="20sp"
-    />
+    <LinearLayout
+            android:id="@+id/input_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="10dp">
+
+        <EditText
+                android:id="@+id/input_url"
+                android:layout_centerHorizontal="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="Youtube URL"
+                android:paddingHorizontal="15dp"
+                android:layout_weight="0.5"
+                android:inputType="textUri"
+                android:textColorHint="@color/gray"
+                style="@style/ButtonTextStyle"
+                android:letterSpacing="0"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:layout_gravity="center"
+                android:layout_marginHorizontal="10dp"/>
+
+        <EditText
+                android:id="@+id/text_file_name"
+                android:layout_weight="0.5"
+                android:paddingHorizontal="15dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColorHint="@color/gray"
+                style="@style/ButtonTextStyle"
+                android:letterSpacing="0"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:layout_marginHorizontal="10dp"
+                android:textAllCaps="true"
+                android:hint="file name"/>
+    </LinearLayout>
+
 
     <com.google.android.material.card.MaterialCardView
-            android:layout_below="@id/input_url"
+            android:layout_below="@id/input_layout"
             android:id="@+id/card_web"
             app:strokeColor="@color/black"
             app:strokeWidth="1dp"

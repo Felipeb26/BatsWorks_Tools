@@ -14,15 +14,16 @@ import com.batsworks.simplewebview.notification.PushNotification;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Locale;
 
 @SuppressLint("MissingPermission")
 public class FileDownloader {
 
-    private static final int BUFFER_SIZE = 8192;
+    private static final int BUFFER_SIZE = 8196;
     private static final String TAG = "23";
     private PushNotification pushNotification;
     private final ProgressBar progressBar;
@@ -41,6 +42,7 @@ public class FileDownloader {
         this.title = title;
         this.contentLenght = contentLeght;
     }
+
 
     public void makeRequest(String urlRequest, String savePath) {
         pushNotification = new PushNotification();
@@ -67,12 +69,10 @@ public class FileDownloader {
         }
     }
 
-    private Void downloadFile(HttpURLConnection connection, String path) {
-        try {
-            float contentLength = connection.getContentLength();
-            BufferedInputStream is = new BufferedInputStream(connection.getInputStream());
-            FileOutputStream fos = new FileOutputStream(path);
-            BufferedOutputStream bos = new BufferedOutputStream(fos, BUFFER_SIZE);
+    private void downloadFile(HttpURLConnection connection, String path) {
+        try (BufferedInputStream is = new BufferedInputStream(connection.getInputStream());
+             BufferedOutputStream bos = new BufferedOutputStream(Files.newOutputStream(Paths.get(path)), BUFFER_SIZE)) {
+
 
             byte[] buffer = new byte[BUFFER_SIZE];
             int bytesRead;
@@ -82,20 +82,24 @@ public class FileDownloader {
             while ((bytesRead = is.read(buffer)) != -1) {
                 bos.write(buffer, 0, bytesRead);
                 totalBytesRead += bytesRead;
-                float contentSize = contentLenght >= 0 ? contentLength : contentLenght;
-                double content_total_lenght = Math.floor(contentSize) / 1000000;
-                int progress = (int) (totalBytesRead / contentSize * 100);
+                double content_total_lenght = Math.floor(contentLenght) / 1000000;
+                int progress = (int) (totalBytesRead / contentLenght * 100);
 
                 Handler handler = new Handler(Looper.getMainLooper());
                 int finalLenght = lenght;
                 handler.post(() -> {
                     if ((finalLenght % 2) == 0) {
+                        NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
+                        inboxStyle.addLine(String.format(Locale.ROOT, "%.2f/%.2f", content_total_lenght, Format.bytesToMB(totalBytesRead)));
+                        inboxStyle.addLine(progress + "%");
+
                         notificationManagerCompat = NotificationManagerCompat.from(context);
                         notificationManagerCompat.notify(2, notificationBuilder
-                                .setContentText(String.format(Locale.ROOT, "%.2f/%.2f\t%s", content_total_lenght, Format.bytesToMB(totalBytesRead), progress) + "%")
+                                .setContentText(String.format(Locale.ROOT, "%.2f/%.2f", content_total_lenght, Format.bytesToMB(totalBytesRead)))
                                 .setProgress((int) content_total_lenght, (int) Math.min(Format.bytesToMB(totalBytesRead), 100), false)
                                 .setOnlyAlertOnce(true)
                                 .setOngoing(true)
+                                .setStyle(inboxStyle)
                                 .build());
                     }
                 });
@@ -109,10 +113,6 @@ public class FileDownloader {
 
             progressBar.setProgress(100);
             bos.flush();
-            bos.close();
-            fos.flush();
-            fos.close();
-            is.close();
         } catch (Exception e) {
             Log.i("24", e.getMessage() + "\n");
             e.printStackTrace();
@@ -122,10 +122,10 @@ public class FileDownloader {
             notificationManagerCompat.notify(2, notificationBuilder
                     .setContentText("Download have finish")
                     .setProgress((int) 100, 100, false)
+                    .setAutoCancel(true)
                     .setOngoing(true)
                     .build());
         }
-        return null;
     }
 
 }

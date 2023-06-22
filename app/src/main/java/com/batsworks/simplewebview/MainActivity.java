@@ -31,7 +31,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.batsworks.simplewebview.brodcast.InternetBrodcast;
 import com.batsworks.simplewebview.brodcast.NotificationReceiver;
 import com.batsworks.simplewebview.config.internet.CheckInternet;
-import com.batsworks.simplewebview.fragments.BatsWorksAdmin;
+import com.batsworks.simplewebview.fragments.Admin;
 import com.batsworks.simplewebview.fragments.Home;
 import com.batsworks.simplewebview.fragments.TimeCard;
 import com.batsworks.simplewebview.fragments.Youtube;
@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
                 replaceFragment(new Home());
                 break;
             case R.id.nav_admin:
-                replaceFragment(new BatsWorksAdmin());
+                replaceFragment(new Admin());
                 break;
             case R.id.nav_timecard:
                 replaceFragment(new TimeCard());
