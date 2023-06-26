@@ -1,9 +1,11 @@
 package com.batsworks.simplewebview;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -11,15 +13,26 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.util.TypedValue;
+import android.view.DragEvent;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
@@ -28,6 +41,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+
 import com.batsworks.simplewebview.brodcast.InternetBrodcast;
 import com.batsworks.simplewebview.brodcast.NotificationReceiver;
 import com.batsworks.simplewebview.config.internet.CheckInternet;
@@ -40,6 +54,7 @@ import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -67,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
     private IntObservable intObservable;
     private BroadcastReceiver notificationReceiver, internetReceiver;
     int doubleClick = 0;
+    private int time = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +111,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void observerInternet() {
         CheckInternet.Status status = CheckInternet.networkInfo(this);
-
         final Handler handler = new Handler(Looper.getMainLooper());
         ExecutorService service = Executors.newSingleThreadExecutor();
 
@@ -187,6 +202,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        int keyCode = event.getKeyCode();
+        int action = event.getAction();
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            if (action == KeyEvent.ACTION_DOWN) {
+                if (time == 2) {
+                    actionButton.setVisibility(actionButton.getVisibility() == View.INVISIBLE ? View.VISIBLE : View.INVISIBLE);
+                    time = 1;
+                } else {
+                    time++;
+                }
+            }
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    @Override
     public void onConfigurationChanged(@NonNull @NotNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
@@ -233,6 +266,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         checkingInternetStatus();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
     }
 
     @Override
